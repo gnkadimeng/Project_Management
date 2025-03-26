@@ -1,0 +1,125 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fff8e1; /* light yellow / cream */
+    color: #333;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    color: #6a1b9a; /* deep purple */
+    margin-top: 40px;
+}
+
+.container {
+    width: 90%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.notification {
+    background-color: #ffffff;
+    border-left: 6px solid #ff9800; /* orange accent */
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+.notification.read {
+    opacity: 0.7;
+    border-left-color: #6a1b9a; /* purple for read */
+}
+
+.notification p {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+.notification small {
+    color: #777;
+    font-size: 13px;
+}
+
+.btn {
+    padding: 6px 12px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    color: white;
+}
+
+.btn-read {
+    background-color: #6a1b9a;
+}
+
+.btn-delete {
+    background-color: #f44336;
+}
+
+.btn-home {
+    background-color: #ff9800;
+    margin-top: 30px;
+    display: inline-block;
+}
+
+
+.topbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background-color: #f5e9c7;
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.notification-icon {
+    position: relative;
+    font-size: 20px;
+    margin-right: 20px;
+    cursor: pointer;
+}
+
+#unread-count {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #ff5722;
+    color: white;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 50%;
+}
+
+.avatar img {
+    border-radius: 50%;
+    border: 2px solid #6a1b9a;
+}
+
+/* Popup alert */
+.popup {
+    position: fixed;
+    top: 70px;
+    right: 30px;
+    background-color: #6a1b9a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.popup.show {
+    opacity: 1;
+}
+
+.popup.hidden {
+    opacity: 0;
+}

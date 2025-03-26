@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ task.title }}</title>
+  <link rel="stylesheet" href="{% static 'css/collaborations.css' %}">
+  <style>
+    .mention {
+      color: #6a1b9a;
+      font-weight: bold;
+    }
+  </style>
+  
+</head>
+<body>
+
+<h1>Task: {{ task.title }}</h1>
+<p><strong>Status:</strong> {{ task.get_status_display }}</p>
+<p><strong>Assigned To:</strong> {{ task.assigned_to.username }}</p>
+<p><strong>Description:</strong> {{ task.description }}</p>
+<p><strong>Due Date:</strong> {{ task.due_date }}</p>
+
+<hr>
+
+<h2>💬 Comments</h2>
+<div class="comment-section">
+  {% for comment in comments %}
+    <div class="comment">
+      <strong>{{ comment.user.username }}</strong> <em>on {{ comment.created_at }}</em>
+
+      <p>{{ comment.formatted_content|linebreaksbr }}</p>
+
+      {% if comment.user == request.user %}
+        <a href="{% url 'delete_comment' comment.id %}" style="color: red; font-size: 13px;" onclick="return confirm('Delete this comment?')">Delete</a>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p>No comments yet.</p>
+  {% endfor %}
+</div>
+
+<form method="post">
+  {% csrf_token %}
+  {{ comment_form.as_p }}
+  <button type="submit" name="add_comment" class="btn">Add Comment</button>
+</form>
+
+<hr>
+
+<h2>📁 Files</h2>
+<ul>
+  {% for f in files %}
+    <li>
+      <a href="{{ f.file.url }}" target="_blank">{{ f.file.name }}</a> ({{ f.uploaded_at }})
+      {% if task.assigned_to == user %}
+        <a href="{% url 'delete_file' f.id %}" style="color: red; font-size: 13px;" onclick="return confirm('Delete this file?')">Delete</a>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No files uploaded.</li>
+  {% endfor %}
+</ul>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ file_form.as_p }}
+  <button type="submit" name="upload_file" class="btn">Upload File</button>
+</form>
+
+<a href="{% url 'collaborations' %}" class="btn-home">⬅ Back to Collaborations</a>
+
+</body>
+</html>

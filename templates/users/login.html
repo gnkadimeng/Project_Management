@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | Project Manager</title>
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+
+<div class="login-container">
+  <h1>👋 Welcome Back</h1>
+  <p class="subtitle">Login to continue managing your projects</p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <p class="msg">{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">🔐 Login</button>
+  </form>
+
+  <p class="note">Don't have an account? Contact your Project Manager.</p>
+</div>
+
+</body>
+</html>

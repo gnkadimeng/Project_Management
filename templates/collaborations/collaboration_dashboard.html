@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Collaborations</title>
+  <link rel="stylesheet" href="{% static 'css/collaborations.css' %}">
+</head>
+<body>
+
+<h1>🤝 Team Collaborations</h1>
+
+<h2>📝 My Tasks</h2>
+<ul class="task-list">
+  {% for task in my_tasks %}
+    <li>
+      <strong>{{ task.title }}</strong> - {{ task.status }}
+      <a href="{% url 'view_task' task.id %}">View</a>
+    </li>
+  {% empty %}
+    <li>You have no tasks.</li>
+  {% endfor %}
+</ul>
+
+<h2>👥 Team Tasks</h2>
+<ul class="task-list">
+  {% for task in all_tasks %}
+    <li>
+      <strong>{{ task.title }}</strong> - {{ task.status }} ({{ task.assigned_to.username }})
+      <a href="{% url 'view_task' task.id %}">View</a>
+    </li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'home' %}" class="btn-home">⬅ Back to Home</a>
+
+</body>
+</html>

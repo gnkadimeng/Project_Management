@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Report</title>
+  <link rel="stylesheet" href="{% static 'css/reports.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>📊 Project Progress Report</h1>
+
+<form method="get" class="filter-form">
+  <label>Filter by Member:
+    <select name="user">
+      <option value="all">All</option>
+      {% for user in users %}
+        <option value="{{ user.id }}" {% if selected_user == user.id %}selected{% endif %}>{{ user.username }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>Status:
+    <select name="status">
+      <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All</option>
+      <option value="todo" {% if selected_status == 'todo' %}selected{% endif %}>To Do</option>
+      <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+      <option value="done" {% if selected_status == 'done' %}selected{% endif %}>Done</option>
+    </select>
+  </label>
+
+  <label>Due Date:
+    <input type="date" name="due" value="{{ selected_due }}">
+  </label>
+
+  <button type="submit">Apply Filters</button>
+</form>
+
+
+<div class="card-container">
+  <div class="card">
+    <h2>Total Tasks</h2>
+    <p class="total">{{ total }}</p>
+  </div>
+  <div class="card">
+    <h2>Completed</h2>
+    <p class="completed">{{ completed }}</p>
+  </div>
+  <div class="card">
+    <h2>In Progress</h2>
+    <p class="inprogress">{{ in_progress }}</p>
+  </div>
+  <div class="card">
+    <h2>To Do</h2>
+    <p class="todo">{{ todo }}</p>
+  </div>
+</div>
+
+<canvas id="taskChart" width="400" height="200"></canvas>
+
+<h2>Team Member Progress</h2>
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Completed</th>
+      <th>Total Tasks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in user_data %}
+    <tr>
+      <td>{{ u.name }}</td>
+      <td>{{ u.completed }}</td>
+      <td>{{ u.total }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<a href="{% url 'home' %}" class="btn-home">⬅ Back to Home</a>
+
+<script>
+const ctx = document.getElementById('taskChart');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Completed', 'In Progress', 'To Do'],
+    datasets: [{
+      label: 'Tasks',
+      data: [{{ completed }}, {{ in_progress }}, {{ todo }}],
+      backgroundColor: ['#4caf50', '#ff9800', '#f44336']
+    }]
+  },
+});
+</script>
+
+</body>
+</html>

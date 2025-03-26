@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Project Overview</title>
+  <link rel="stylesheet" href="{% static 'css/reports.css' %}">
+</head>
+<body>
+
+<h1>🛠️ Admin Dashboard: Team Report</h1>
+
+<div class="card-container">
+  <div class="card">
+    <h2>Total Tasks</h2>
+    <p class="total">{{ total }}</p>
+  </div>
+  <div class="card">
+    <h2>Completed</h2>
+    <p class="completed">{{ completed }}</p>
+  </div>
+  <div class="card">
+    <h2>In Progress</h2>
+    <p class="inprogress">{{ in_progress }}</p>
+  </div>
+  <div class="card">
+    <h2>To Do</h2>
+    <p class="todo">{{ todo }}</p>
+  </div>
+</div>
+
+<h2>📊 Team Breakdown</h2>
+<a href="{% url 'export_csv' %}" class="btn-export">⬇ Export CSV</a>
+
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Total</th>
+      <th>Completed</th>
+      <th>In Progress</th>
+      <th>To Do</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in user_data %}
+    <tr>
+      <td>{{ u.name }}</td>
+      <td>{{ u.total }}</td>
+      <td>{{ u.completed }}</td>
+      <td>{{ u.in_progress }}</td>
+      <td>{{ u.todo }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>📉 Team Task Comparison</h2>
+<canvas id="userChart" width="800" height="400"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  const ctx = document.getElementById('userChart');
+  const chartData = {
+    labels: [{% for u in user_data %}'{{ u.name }}',{% endfor %}],
+    datasets: [
+      {
+        label: 'Completed',
+        data: [{% for u in user_data %}{{ u.completed }},{% endfor %}],
+        backgroundColor: '#4caf50'
+      },
+      {
+        label: 'In Progress',
+        data: [{% for u in user_data %}{{ u.in_progress }},{% endfor %}],
+        backgroundColor: '#ff9800'
+      },
+      {
+        label: 'To Do',
+        data: [{% for u in user_data %}{{ u.todo }},{% endfor %}],
+        backgroundColor: '#f44336'
+      }
+    ]
+  };
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: chartData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        title: {
+          display: true,
+          text: 'Task Distribution by User'
+        }
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true }
+      }
+    }
+  });
+</script>
+
+
+
+
+<a href="{% url 'home' %}" class="btn-home">⬅ Back to Home</a>
+
+</body>
+</html>
