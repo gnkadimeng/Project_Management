@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Project Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        /* Color Palette */
+        :root {
+            --primary: #2E1A46;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary: #cdb383;
+            --secondary-light: #5dade2;
+            --secondary-dark: #2980b9;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --info: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #34495e;
+            --sidebar-active: #f8f9fa;
+            --sidebar-hover: #f1f5f9;
+            --sidebar-border: #e5e7eb;
+            --content-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+
+        body {
+            background-color: var(--content-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-primary);
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-header h3,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .dropdown-toggle .bi-chevron-down,
+        .sidebar.collapsed .sidebar-footer span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .dropdown-menu {
+            position: absolute;
+            left: 70px;
+            width: 180px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 3px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            width: calc(100% - 40px);
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item {
+            padding: 8px 15px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--secondary);
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-draft {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        
+        .status-in-progress {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-review {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-overdue {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            display: none;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+        }
+
+        /* Table styling */
+        .chapter-table {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .chapter-table th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .chapter-table tr:hover {
+            background-color: var(--sidebar-hover);
+        }
+        
+        .chapter-table .file-link {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+        
+        .chapter-table .file-link:hover {
+            text-decoration: underline;
+        }
+
+        /* KANBAN Board Styles */
+        .kanban-board {
+            display: flex;
+            overflow-x: auto;
+            padding: 20px 0;
+            gap: 15px;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .kanban-column {
+            min-width: 300px;
+            width: 300px;
+            background-color: var(--sidebar-hover);
+            border-radius: 8px;
+            padding: 15px;
+            height: fit-content;
+        }
+        
+        .kanban-column-header {
+            padding: 10px;
+            margin: -15px -15px 15px -15px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .writing-header {
+            background-color: #e2f0fd;
+            color: #0d6efd;
+        }
+        
+        .submission-header {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .review-header {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .production-header {
+            background-color: #e2d9f3;
+            color: #42206a;
+        }
+        
+        .published-header {
+            background-color: #d1e7dd;
+            color: #0a3622;
+        }
+        
+        .kanban-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: grab;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .kanban-card:active {
+            cursor: grabbing;
+        }
+        
+        .kanban-card-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .kanban-card-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .kanban-card-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+        
+        .kanban-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        
+        .kanban-card-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .kanban-add-card {
+            width: 100%;
+            padding: 10px;
+            border: 1px dashed var(--text-secondary);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .kanban-add-card:hover {
+            background-color: rgba(255,255,255,0.5);
+        }
+        
+        /* Drag and drop styling */
+        .kanban-column.drop-zone {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .kanban-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+        }
+        
+        /* Additional status badges */
+        .status-drafting {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+        
+        .status-revised {
+            background-color: #e2f0fd;
+            color: #0d6efd;
+        }
+        
+        .status-final {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-submitted {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-revisions {
+            background-color: #fff3cd;
+            color: #664d03;
+        }
+        
+        .status-accepted {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-copyediting {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        
+        .status-published {
+            background-color: #d1e7dd;
+            color: #0a3622;
+            font-weight: bold;
+        }
+        
+        /* View switcher */
+        .view-switcher {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .view-switcher .nav-link {
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 10px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .view-switcher .nav-link.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background-color: transparent;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .chapter-table {
+                font-size: 0.85rem;
+            }
+            
+            .action-btn {
+                padding: 3px 6px;
+                font-size: 0.75rem;
+            }
+            
+            .kanban-board {
+                flex-direction: column;
+                overflow-x: hidden;
+            }
+            
+            .kanban-column {
+                width: 100%;
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="toggle-btn" id="toggleBtn">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        
+            
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="updatedDashboard.html" class="nav-link active"><i class="bi bi-house"></i>
+                    <span>Home</span></a></li>
+            <li><a href="updatedkaban.html" class="nav-link"><i class="bi bi-kanban"></i> <span>Kanban Board</span></a>
+            </li>
+            <li><a href="Elearning.html" class="nav-link"><i class="bi bi-collection-play"></i>
+                    <span>e-Learning</span></a></li>
+            <li><a href="Templates.html" class="nav-link"><i class="bi bi-book"></i> <span>Templates</span></a></li>
+            <li><a href="#" class="nav-link"><i class="bi bi-graph-up"></i> <span>Analytics</span></a></li>
+            <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#projectSubmenu" aria-expanded="false">
+                  <i class="bi bi-people"></i> <span>Project Management</span>
+                </a>
+                <ul class="collapse list-unstyled ps-4" id="projectSubmenu">
+                  <li><a href="journals.html" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span>Paper</span></a></li>
+                  <li><a href="books.html" class="nav-link"><i class="bi bi-book"></i> <span>Books</span></a></li>
+                  <li><a href="app_kanban.html" class="nav-link"><i class="bi bi-kanban"></i> <span>Development</span></a></li>
+                </ul>
+              </li>
+              
+            <li><a href="#" class="nav-link"><i class="bi bi-gear"></i> <span>Settings</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="#" class="logout-btn"><i class="bi bi-box-arrow-left"></i> <span>Logout</span></a>
+        </div>
+    </div>
+
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Book Project Management</h1>
+            <div class="d-flex">
+                <div class="input-group" style="width: 250px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" placeholder="Search books..." id="searchInput">
+                </div>
+                <button class="btn btn-primary ms-3" id="addNewBookBtn">
+                    <i class="bi bi-plus-circle"></i> Add Book
+                </button>
+            </div>
+        </div>
+
+        <!-- View Switcher -->
+        <ul class="nav view-switcher" id="viewTabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-view="kanban">Kanban View</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-view="table">Table View</a>
+            </li>
+        </ul>
+
+        <!-- KANBAN Board (Default View) -->
+        <div class="kanban-board" id="kanbanBoard">
+            <!-- Writing & Development Column -->
+            <div class="kanban-column" data-status="writing">
+                <div class="kanban-column-header writing-header">
+                    <span>Writing & Development</span>
+                    <span class="badge bg-primary" id="writing-count">0</span>
+                </div>
+                <div id="writing-column">
+                    <!-- Cards will be added here dynamically -->
+                </div>
+                <button class="kanban-add-card" data-column="writing">
+                    <i class="bi bi-plus"></i> Add Book
+                </button>
+            </div>
+            
+            <!-- Journal Submission Column -->
+            <div class="kanban-column" data-status="submission">
+                <div class="kanban-column-header submission-header">
+                    <span>Journal Submission</span>
+                    <span class="badge bg-warning text-dark" id="submission-count">0</span>
+                </div>
+                <div id="submission-column">
+                    <!-- Cards will be added here dynamically -->
+                </div>
+                <button class="kanban-add-card" data-column="submission">
+                    <i class="bi bi-plus"></i> Add Book
+                </button>
+            </div>
+            
+            <!-- Peer Review Column -->
+            <div class="kanban-column" data-status="review">
+                <div class="kanban-column-header review-header">
+                    <span>Peer Review</span>
+                    <span class="badge bg-info" id="review-count">0</span>
+                </div>
+                <div id="review-column">
+                    <!-- Cards will be added here dynamically -->
+                </div>
+                <button class="kanban-add-card" data-column="review">
+                    <i class="bi bi-plus"></i> Add Book
+                </button>
+            </div>
+            
+            <!-- Accepted for Publication Column -->
+            <div class="kanban-column" data-status="production">
+                <div class="kanban-column-header production-header">
+                    <span>In Production</span>
+                    <span class="badge" style="background-color: #42206a; color: white;" id="production-count">0</span>
+                </div>
+                <div id="production-column">
+                    <!-- Cards will be added here dynamically -->
+                </div>
+                <button class="kanban-add-card" data-column="production">
+                    <i class="bi bi-plus"></i> Add Book
+                </button>
+            </div>
+            
+            <!-- Published Column -->
+            <div class="kanban-column" data-status="published">
+                <div class="kanban-column-header published-header">
+                    <span>Published</span>
+                    <span class="badge bg-success" id="published-count">0</span>
+                </div>
+                <div id="published-column">
+                    <!-- Cards will be added here dynamically -->
+                </div>
+                <button class="kanban-add-card" data-column="published">
+                    <i class="bi bi-plus"></i> Add Book
+                </button>
+            </div>
+        </div>
+
+        <!-- Table View (Hidden by default) -->
+        <div id="tableView" style="display: none;">
+            <!-- Book Info Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h3 class="card-title">Select a book to view chapters</h3>
+                            <p class="card-text">Click on a book in the kanban view and select "View Full Chapters Table" to see detailed chapter information.</p>
+                            <div class="d-flex">
+                                <div class="me-4">
+                                    <h6 class="mb-1">Lead Editor</h6>
+                                    <p class="mb-0">-</p>
+                                </div>
+                                <div class="me-4">
+                                    <h6 class="mb-1">Due Date</h6>
+                                    <p class="mb-0">-</p>
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">Progress</h6>
+                                    <div class="progress" style="height: 20px; width: 150px;">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-printer"></i> Print Summary
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chapters Table -->
+            <div class="card chapter-table">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chapter</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Editor</th>
+                                    <th>Status</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">
+                                        No book selected. Please choose a book from the kanban view to see its chapters.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav aria-label="Chapter pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Book Modal -->
+        <div class="modal fade" id="addBookModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Book</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="bookForm">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="bookTitle" class="form-label">Book Title</label>
+                                    <input type="text" class="form-control" id="bookTitle" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="initialStatus" class="form-label">Initial Status</label>
+                                    <select class="form-select" id="initialStatus" required>
+                                        <option value="writing">Writing & Development</option>
+                                        <option value="submission">Journal Submission</option>
+                                        <option value="review">Peer Review</option>
+                                        <option value="production">In Production</option>
+                                        <option value="published">Published</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="leadAuthor" class="form-label">Lead Author</label>
+                                    <input type="text" class="form-control" id="leadAuthor" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="dueDate" class="form-label">Due Date</label>
+                                    <input type="date" class="form-control" id="dueDate">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="bookDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="bookDescription" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="totalChapters" class="form-label">Total Chapters</label>
+                                    <input type="number" class="form-control" id="totalChapters" min="1" value="1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="completedChapters" class="form-label">Completed Chapters</label>
+                                    <input type="number" class="form-control" id="completedChapters" min="0" value="0">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="publisher" class="form-label">Publisher (if applicable)</label>
+                                <input type="text" class="form-control" id="publisher">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="saveBookBtn">Add Book</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Book Details Modal -->
+        <div class="modal fade" id="bookDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="detailsModalTitle">Book Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="bookDetailsContent">
+                        <!-- Content will be filled dynamically -->
+                    </div>
+                    <div class="modal-footer">
+                        <!-- Footer buttons will be filled dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Modal -->
+        <div class="modal fade" id="commentsModal" tabindex="-1" aria-labelledby="commentsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="commentsModalLabel">Comments</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-4">
+                            <!-- Comments will be added dynamically -->
+                        </div>
+                        
+                        <form>
+                            <div class="mb-3">
+                                <label for="newComment" class="form-label">Add New Comment</label>
+                                <textarea class="form-control" id="newComment" rows="3"></textarea>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <button type="button" class="btn btn-outline-secondary">
+                                        <i class="bi bi-paperclip"></i> Attach File
+                                    </button>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Post Comment</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+         // Sidebar Toggle Functionality
+         const toggleBtn = document.getElementById('toggleBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Change the icon based on state
+            const icon = toggleBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+
+        // Mobile Menu Toggle
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && event.target !== mobileMenuBtn) {
+                sidebar.classList.remove('show');
+            }
+        });
+       // Book data storage
+let books = [
+    {
+        id: 1,
+        title: "Advanced Web Development",
+        status: "writing",
+        author: "Sarah Johnson",
+        dueDate: "2024-06-15",
+        chapters: { total: 15, completed: 12 },
+        description: "A comprehensive guide to modern web development techniques and best practices.",
+        publisher: ""
+    },
+    {
+        id: 2,
+        title: "Modern JavaScript Patterns",
+        status: "writing",
+        author: "Michael Chen",
+        dueDate: "2024-07-01",
+        chapters: { total: 10, completed: 8 },
+        description: "Exploring modern JavaScript patterns and best practices.",
+        publisher: ""
+    },
+    {
+        id: 3,
+        title: "Data Science Handbook",
+        status: "submission",
+        author: "Emily Davis",
+        dueDate: "",
+        chapters: { total: 12, completed: 12 },
+        description: "A practical guide to data science techniques and applications.",
+        publisher: "Tech Publications"
+    },
+    {
+        id: 4,
+        title: "Python for Beginners",
+        status: "submission",
+        author: "James Wilson",
+        dueDate: "2024-05-30",
+        chapters: { total: 8, completed: 8 },
+        description: "An introduction to Python programming for complete beginners.",
+        publisher: "Code Press"
+    },
+    {
+        id: 5,
+        title: "Machine Learning Fundamentals",
+        status: "review",
+        author: "Maria Rodriguez",
+        dueDate: "2024-08-15",
+        chapters: { total: 14, completed: 14 },
+        description: "Core concepts and practical applications of machine learning.",
+        publisher: "AI Books"
+    },
+    {
+        id: 6,
+        title: "Cloud Computing Architectures",
+        status: "production",
+        author: "David Kim",
+        dueDate: "2024-04-20",
+        chapters: { total: 10, completed: 10 },
+        description: "Designing scalable cloud computing architectures.",
+        publisher: "Cloud Media"
+    },
+    {
+        id: 7,
+        title: "DevOps Handbook",
+        status: "production",
+        author: "Lisa Wong",
+        dueDate: "2024-05-10",
+        chapters: { total: 12, completed: 12 },
+        description: "Best practices for DevOps implementation.",
+        publisher: "DevOps Press"
+    },
+    {
+        id: 8,
+        title: "Cybersecurity Essentials",
+        status: "published",
+        author: "Robert Taylor",
+        dueDate: "2024-01-15",
+        chapters: { total: 9, completed: 9 },
+        description: "Essential cybersecurity principles for modern organizations.",
+        publisher: "Security Books"
+    }
+];
+
+// DOM Elements
+const kanbanBoard = document.getElementById('kanbanBoard');
+const tableView = document.getElementById('tableView');
+const viewTabs = document.getElementById('viewTabs');
+const searchInput = document.getElementById('searchInput');
+const addNewBookBtn = document.getElementById('addNewBookBtn');
+const saveBookBtn = document.getElementById('saveBookBtn');
+const bookForm = document.getElementById('bookForm');
+const bookDetailsModal = new bootstrap.Modal(document.getElementById('bookDetailsModal'));
+const addBookModal = new bootstrap.Modal(document.getElementById('addBookModal'));
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    renderKanbanBoard();
+    setupEventListeners();
+    updateCounts();
+});
+
+// Set up event listeners
+function setupEventListeners() {
+    // View switcher tabs
+    viewTabs.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (e.target.tagName === 'A') {
+            // Update active tab
+            document.querySelectorAll('#viewTabs .nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            e.target.classList.add('active');
+            
+            // Show the selected view
+            const view = e.target.dataset.view;
+            if (view === 'kanban') {
+                kanbanBoard.style.display = 'flex';
+                tableView.style.display = 'none';
+            } else {
+                kanbanBoard.style.display = 'none';
+                tableView.style.display = 'block';
+            }
+        }
+    });
+    
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        filterBooks(searchTerm);
+    });
+    
+    // Add new book button
+    addNewBookBtn.addEventListener('click', function() {
+        addBookModal.show();
+    });
+    
+    // Save new book
+    saveBookBtn.addEventListener('click', function() {
+        addNewBook();
+    });
+    
+    // Setup drag and drop for kanban board
+    setupDragAndDrop();
+}
+
+// Render the kanban board with books
+function renderKanbanBoard() {
+    // Clear all columns first
+    document.querySelectorAll('.kanban-column > div:first-child + div').forEach(column => {
+        column.innerHTML = '';
+    });
+    
+    // Add books to their respective columns
+    books.forEach(book => {
+        addBookToKanban(book);
+    });
+}
+
+// Add a book to the kanban board
+function addBookToKanban(book) {
+    const column = document.querySelector(`#${book.status}-column`);
+    if (!column) return;
+    
+    const card = document.createElement('div');
+    card.className = 'kanban-card';
+    card.draggable = true;
+    card.dataset.id = book.id;
+    
+    // Format due date
+    let dueDateText = '';
+    if (book.dueDate) {
+        const dueDate = new Date(book.dueDate);
+        dueDateText = `Due: ${dueDate.toLocaleDateString()}`;
+    }
+    
+    // Calculate progress percentage
+    const progressPercent = Math.round((book.chapters.completed / book.chapters.total) * 100);
+    
+    card.innerHTML = `
+        <div class="kanban-card-header">
+            <span class="kanban-card-title">${book.title}</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="showBookDetails(${book.id})">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+        </div>
+        <div class="kanban-card-meta">
+            <div>${book.author}</div>
+            <div>${dueDateText}</div>
+        </div>
+        <div class="progress mb-2" style="height: 5px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: ${progressPercent}%" 
+                aria-valuenow="${progressPercent}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div class="kanban-card-footer">
+            <span>${book.chapters.completed}/${book.chapters.total} chapters</span>
+            <div class="kanban-card-actions">
+                <button class="btn btn-sm btn-outline-primary" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    column.appendChild(card);
+}
+
+// Filter books based on search term
+function filterBooks(searchTerm) {
+    if (!searchTerm) {
+        renderKanbanBoard();
+        return;
+    }
+    
+    // Clear all columns first
+    document.querySelectorAll('.kanban-column > div:first-child + div').forEach(column => {
+        column.innerHTML = '';
+    });
+    
+    // Filter and display matching books
+    const filteredBooks = books.filter(book => 
+        book.title.toLowerCase().includes(searchTerm) || 
+        book.author.toLowerCase().includes(searchTerm) ||
+        book.description.toLowerCase().includes(searchTerm)
+    );
+    
+    filteredBooks.forEach(book => {
+        addBookToKanban(book);
+    });
+    
+    // Update counts for filtered books
+    updateCounts(filteredBooks);
+}
+
+// Update the count badges on each column
+function updateCounts(filteredBooks = null) {
+    const booksToCount = filteredBooks || books;
+    
+    const counts = {
+        writing: 0,
+        submission: 0,
+        review: 0,
+        production: 0,
+        published: 0
+    };
+    
+    booksToCount.forEach(book => {
+        counts[book.status]++;
+    });
+    
+    // Update the count badges
+    document.getElementById('writing-count').textContent = counts.writing;
+    document.getElementById('submission-count').textContent = counts.submission;
+    document.getElementById('review-count').textContent = counts.review;
+    document.getElementById('production-count').textContent = counts.production;
+    document.getElementById('published-count').textContent = counts.published;
+}
+
+// Add a new book
+function addNewBook() {
+    if (!bookForm.checkValidity()) {
+        bookForm.reportValidity();
+        return;
+    }
+    
+    const newBook = {
+        id: books.length > 0 ? Math.max(...books.map(b => b.id)) + 1 : 1,
+        title: document.getElementById('bookTitle').value,
+        status: document.getElementById('initialStatus').value,
+        author: document.getElementById('leadAuthor').value,
+        dueDate: document.getElementById('dueDate').value,
+        chapters: {
+            total: parseInt(document.getElementById('totalChapters').value),
+            completed: parseInt(document.getElementById('completedChapters').value)
+        },
+        description: document.getElementById('bookDescription').value,
+        publisher: document.getElementById('publisher').value
+    };
+    
+    books.push(newBook);
+    addBookToKanban(newBook);
+    updateCounts();
+    
+    // Reset form and close modal
+    bookForm.reset();
+    addBookModal.hide();
+}
+
+// Show book details in modal
+function showBookDetails(bookId) {
+    const book = books.find(b => b.id === bookId);
+    if (!book) return;
+    
+    // Format dates
+    const createdDate = new Date().toLocaleDateString();
+    const dueDate = book.dueDate ? new Date(book.dueDate).toLocaleDateString() : 'Not set';
+    
+    // Calculate progress
+    const progressPercent = Math.round((book.chapters.completed / book.chapters.total) * 100);
+    
+    // Set modal title
+    document.getElementById('detailsModalTitle').textContent = book.title;
+    
+    // Set modal content
+    document.getElementById('bookDetailsContent').innerHTML = `
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <p class="lead">${book.description}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Lead Author</h6>
+                        <p>${book.author}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Publisher</h6>
+                        <p>${book.publisher || 'Not specified'}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Created</h6>
+                        <p>${createdDate}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Due Date</h6>
+                        <p>${dueDate}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Progress</h5>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: ${progressPercent}%" 
+                                aria-valuenow="${progressPercent}" aria-valuemin="0" aria-valuemax="100">${progressPercent}%</div>
+                        </div>
+                        <p class="card-text">${book.chapters.completed} of ${book.chapters.total} chapters completed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <h5 class="mb-3">Chapters</h5>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${generateChapterRows(book)}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    bookDetailsModal.show();
+}
+
+// Generate chapter rows for book details
+function generateChapterRows(book) {
+    // In a real app, we would have chapter data for each book
+    // For this demo, we'll generate some placeholder chapters
+    let rows = '';
+    const statuses = ['Draft', 'In Progress', 'In Review', 'Completed'];
+    const authors = [book.author, 'Co-Author 1', 'Co-Author 2', 'Contributor'];
+    
+    for (let i = 1; i <= book.chapters.total; i++) {
+        const status = i <= book.chapters.completed ? 'Completed' : 
+                      i === book.chapters.completed + 1 ? 'In Progress' : 
+                      i < book.chapters.completed ? 'Completed' : 'Draft';
+        
+        const statusClass = status.toLowerCase().replace(' ', '-');
+        const author = authors[Math.min(i-1, authors.length-1)];
+        const lastUpdated = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+        
+        rows += `
+            <tr>
+                <td>${i}</td>
+                <td>${book.title} - Chapter ${i}</td>
+                <td>${author}</td>
+                <td><span class="status-badge status-${statusClass}">${status}</span></td>
+                <td>${lastUpdated}</td>
+            </tr>
+        `;
+    }
+    
+    return rows;
+}
+
+// Setup drag and drop functionality
+function setupDragAndDrop() {
+    const cards = document.querySelectorAll('.kanban-card');
+    const columns = document.querySelectorAll('.kanban-column');
+    
+    let draggedCard = null;
+    
+    // Add event listeners to cards
+    cards.forEach(card => {
+        card.addEventListener('dragstart', dragStart);
+        card.addEventListener('dragend', dragEnd);
+    });
+    
+    // Add event listeners to columns
+    columns.forEach(column => {
+        column.addEventListener('dragover', dragOver);
+        column.addEventListener('dragenter', dragEnter);
+        column.addEventListener('dragleave', dragLeave);
+        column.addEventListener('drop', drop);
+    });
+    
+    function dragStart() {
+        draggedCard = this;
+        setTimeout(() => {
+            this.classList.add('dragging');
+        }, 0);
+    }
+    
+    function dragEnd() {
+        this.classList.remove('dragging');
+        draggedCard = null;
+    }
+    
+    function dragOver(e) {
+        e.preventDefault();
+    }
+    
+    function dragEnter(e) {
+        e.preventDefault();
+        this.classList.add('drop-zone');
+    }
+    
+    function dragLeave() {
+        this.classList.remove('drop-zone');
+    }
+    
+    function drop() {
+        this.classList.remove('drop-zone');
+        
+        if (draggedCard) {
+            const newStatus = this.dataset.status;
+            const bookId = parseInt(draggedCard.dataset.id);
+            
+            // Update the book's status in our data
+            const book = books.find(b => b.id === bookId);
+            if (book && book.status !== newStatus) {
+                book.status = newStatus;
+                updateCounts();
+            }
+            
+            // Move the card to the new column
+            const column = this.querySelector(`#${newStatus}-column`);
+            if (column) {
+                column.appendChild(draggedCard);
+            }
+        }
+    }
+}
+
+// Add book to kanban column when "Add Book" button is clicked in a column
+document.querySelectorAll('.kanban-add-card').forEach(button => {
+    button.addEventListener('click', function() {
+        const column = this.dataset.column;
+        document.getElementById('initialStatus').value = column;
+        addBookModal.show();
+    });
+});
+
+// Make functions available globally for HTML event handlers
+window.showBookDetails = showBookDetails;
+
+    </script>
+    </body>
+    </html>

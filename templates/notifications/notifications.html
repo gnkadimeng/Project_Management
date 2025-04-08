@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -8,113 +7,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Notifications</title>
   <link rel="stylesheet" href="{% static 'css/notifications.css' %}">
-  <!-- <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        .container { width: 50%; margin: auto; }
-        .notification { border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 5px; }
-        .unread { background-color: #ffeb3b; }
-        .read { background-color: #e0e0e0; }
-        .btn { padding: 5px 10px; margin: 5px; text-decoration: none; color: white; border-radius: 5px; }
-        .btn-read { background-color: #4caf50; }
-        .btn-delete { background-color: #f44336; }
-        .btn-home { background-color: #2196f3; display: inline-block; margin-top: 20px; }
-    </style> -->
 </head>
 
 <body>
-
   <div class="topbar">
-    <div class="notification-icon">
+    <div class="notification-icon" id="notification-icon">
       🔔 <span id="unread-count">0</span>
     </div>
     <div class="avatar">
       <img src="{% static 'img/avatar.jpg' %}" alt="User Avatar" width="35" height="35">
     </div>
   </div>
-  
-  <!-- Add this below the topbar -->
+
   <div id="popup-alert" class="popup hidden">
     🔔 New notification received!
   </div>
-  
 
-  <h1>📬Notifications</h1>
-  <div class="container">
-    <div id="notification-container">
-      {% include 'notifications/partials/notification_list.html' %}
+  <!-- Side panel -->
+  <div id="notification-panel" class="side-panel">
+    <div class="panel-header">
+      <h2>📬 Notifications</h2>
+      <span id="close-panel">&times;</span>
+    </div>
+    <div class="panel-content">
+      <div id="notification-container">
+        {% include 'notifications/partials/notification_list.html' %}
+      </div>
+
+      <h3>🔔 Mentions</h3>
+      <div>
+        {% for notification in mentions %}
+          <div class="notification unread">
+            <p>{{ notification.message }}</p>
+            <small>{{ notification.created_at }}</small>
+          </div>
+        {% empty %}
+          <p>You haven’t been mentioned yet.</p>
+        {% endfor %}
+      </div>
     </div>
   </div>
 
-  <h2>🔔 Mentions</h2>
-<div class="container">
-  {% for notification in mentions %}
-    <div class="notification unread">
-      <p>{{ notification.message }}</p>
-      <small>{{ notification.created_at }}</small>
-    </div>
-  {% empty %}
-    <p>You haven’t been mentioned yet.</p>
-  {% endfor %}
-</div>
-
-
-
   <a href="{% url 'home' %}" class="btn btn-home">Back to Home</a>
 
-
-
   <script>
+    const notificationIcon = document.getElementById('notification-icon');
+    const notificationPanel = document.getElementById('notification-panel');
+    const closePanel = document.getElementById('close-panel');
+
+    notificationIcon.addEventListener('click', () => {
+      notificationPanel.classList.add('active');
+    });
+
+    closePanel.addEventListener('click', () => {
+      notificationPanel.classList.remove('active');
+    });
+
+    window.addEventListener('click', (event) => {
+      if (!notificationPanel.contains(event.target) && !notificationIcon.contains(event.target)) {
+        notificationPanel.classList.remove('active');
+      }
+    });
+
+    let lastNotificationCount = 0;
+
     function fetchNotifications() {
       fetch("{% url 'get_new_notifications' %}")
         .then(response => response.json())
         .then(data => {
           document.getElementById("notification-container").innerHTML = data.html;
+          const unreadCount = document.querySelectorAll(".notification.unread").length;
+          document.getElementById("unread-count").textContent = unreadCount;
+
+          if (unreadCount > lastNotificationCount) {
+            showPopup();
+          }
+          lastNotificationCount = unreadCount;
         });
     }
-  
-    // Fetch every 10 seconds
+
+    function showPopup() {
+      const popup = document.getElementById("popup-alert");
+      popup.classList.remove("hidden");
+      popup.classList.add("show");
+      setTimeout(() => {
+        popup.classList.remove("show");
+        popup.classList.add("hidden");
+      }, 3000);
+    }
+
     setInterval(fetchNotifications, 100000);
+    document.addEventListener("DOMContentLoaded", fetchNotifications);
   </script>
 
-<script>
-  let lastNotificationCount = 0;
-
-  function fetchNotifications() {
-    fetch("{% url 'get_new_notifications' %}")
-      .then(response => response.json())
-      .then(data => {
-        // Replace notification list
-        document.getElementById("notification-container").innerHTML = data.html;
-
-        // Count unread notifications
-        const unreadCount = document.querySelectorAll(".notification.unread").length;
-        document.getElementById("unread-count").textContent = unreadCount;
-
-        // Show popup if there's a new notification
-        if (unreadCount > lastNotificationCount) {
-          showPopup();
-        }
-
-        lastNotificationCount = unreadCount;
-      });
-  }
-
-  function showPopup() {
-    const popup = document.getElementById("popup-alert");
-    popup.classList.remove("hidden");
-    popup.classList.add("show");
-
-    setTimeout(() => {
-      popup.classList.remove("show");
-      popup.classList.add("hidden");
-    }, 3000);
-  }
-
-  setInterval(fetchNotifications, 100000);
-</script>
-
-  
-
 </body>
-
 </html>

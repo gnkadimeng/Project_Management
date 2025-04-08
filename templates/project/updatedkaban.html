@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE KABANBOARD</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    
+    <style>
+        /* Professional Color Palette */
+        :root {
+            --primary: #2E1A46;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary: #cdb383;
+            --secondary-light: #5dade2;
+            --secondary-dark: #2980b9;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --info: #3498db;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #34495e;
+            --sidebar-active: #f8f9fa;
+            --sidebar-hover: #f1f5f9;
+            --sidebar-border: #e5e7eb;
+            --content-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+
+        body {
+            background-color: var(--content-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-primary);
+        }
+
+        /* Sidebar Styling - Exactly Matching Dashboard */
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-header h3,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .dropdown-toggle .bi-chevron-down,
+        .sidebar.collapsed .sidebar-footer span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .dropdown-menu {
+            position: absolute;
+            left: 70px;
+            width: 180px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 3px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            width: calc(100% - 40px);
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item {
+            padding: 8px 15px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--secondary);
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        /* Button Styling */
+        .btn-primary {
+            background-color: var(--secondary) !important;
+            border-color: var(--secondary) !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark) !important;
+            border-color: var(--secondary-dark) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-danger {
+            background-color: var(--accent) !important;
+            border-color: var(--accent) !important;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b !important;
+            border-color: #c0392b !important;
+        }
+
+        /* Profile Container */
+        .profile-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 180px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary);
+            object-fit: cover;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+            border: 2px solid var(--card-bg);
+        }
+
+        /* Kanban Board */
+        .kanban-container {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            overflow-x: auto;
+        }
+
+        .kanban-column {
+            min-width: 300px;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            border-top: 3px solid var(--secondary);
+        }
+
+        .kanban-column h4 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .kanban-item {
+            background-color: var(--sidebar-active);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: grab;
+            transition: all 0.2s ease;
+            border-left: 3px solid var(--secondary);
+        }
+
+        .kanban-item:hover {
+            background-color: var(--sidebar-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+
+        .task-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .priority {
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .priority.high {
+            color: var(--accent);
+        }
+
+        .priority.medium {
+            color: var(--warning);
+        }
+
+        .priority.low {
+            color: var(--success);
+        }
+
+        .due-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        .task-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .task-actions .btn {
+            padding: 5px 10px;
+            font-size: 0.75rem;
+        }
+
+        /* Modal Styling */
+        .modal-header {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        /* Card Styling */
+        .card {
+            background-color: var(--card-bg);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+
+        .card-title {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            border: 1px solid var(--sidebar-border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        /* Table Styling */
+        .table {
+            background-color: var(--card-bg);
+        }
+
+        .table th {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .kanban-container {
+                flex-wrap: wrap;
+            }
+            
+            .kanban-column {
+                min-width: calc(50% - 15px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .kanban-column {
+                min-width: 100%;
+            }
+            
+            .profile-container {
+                width: 160px;
+                right: 10px;
+            }
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            display: none;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="toggle-btn" id="toggleBtn">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        
+            
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="updatedDashboard.html" class="nav-link active"><i class="bi bi-house"></i>
+                    <span>Home</span></a></li>
+            <li><a href="updatedkaban.html" class="nav-link"><i class="bi bi-kanban"></i> <span>Kanban Board</span></a>
+            </li>
+            <li><a href="Elearning.html" class="nav-link"><i class="bi bi-collection-play"></i>
+                    <span>e-Learning</span></a></li>
+            <li><a href="Templates.html" class="nav-link"><i class="bi bi-book"></i> <span>Templates</span></a></li>
+            <li><a href="#" class="nav-link"><i class="bi bi-graph-up"></i> <span>Analytics</span></a></li>
+            <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#projectSubmenu" aria-expanded="false">
+                  <i class="bi bi-people"></i> <span>Project Management</span>
+                </a>
+                <ul class="collapse list-unstyled ps-4" id="projectSubmenu">
+                  <li><a href="journals.html" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span>Paper</span></a></li>
+                  <li><a href="books.html" class="nav-link"><i class="bi bi-book"></i> <span>Books</span></a></li>
+                  <li><a href="app_kanban.html" class="nav-link"><i class="bi bi-kanban"></i> <span>Development</span></a></li>
+                </ul>
+              </li>
+              
+            <li><a href="#" class="nav-link"><i class="bi bi-gear"></i> <span>Settings</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="#" class="logout-btn"><i class="bi bi-box-arrow-left"></i> <span>Logout</span></a>
+        </div>
+    </div>
+
+    <!-- Profile (Top Right) -->
+    <!-- <div class="profile-container">
+        <img src="woman-profile.avif" class="profile-img">
+        <span class="status-badge"></span>
+        <h5>P Mahure</h5>
+        <p class="text-muted">Software Engineer</p>
+    </div> -->
+     <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <h1 class="mb-4">Kanban Board</h1>
+        
+        <!-- Add Task Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Add New Task</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" id="task-title" class="form-control" placeholder="Task Title">
+                    </div>
+                    <div class="col-md-4">
+                        <textarea id="task-description" class="form-control" placeholder="Task Description" rows="1"></textarea>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="task-priority" class="form-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="date" id="task-due-date" class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <button id="add-task-btn" class="btn btn-primary">Add Task</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Buttons -->
+        <div class="mb-4">
+            <button id="generate-report-btn" class="btn btn-primary me-2">Generate Report</button>
+            <button id="download-report-btn" class="btn btn-primary me-2">Download Report as PDF</button>
+            <button id="send-report-btn" class="btn btn-primary">Send Report</button>
+        </div>
+
+        <!-- Report Display -->
+        <div id="report" class="mb-4"></div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-container">
+            <!-- Backlog Column -->
+            <div class="kanban-column" id="backlog" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h4>Backlog</h4>
+            </div>
+
+            <!-- To Do Column -->
+            <div class="kanban-column" id="todo" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h4>To Do</h4>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="kanban-column" id="in-progress" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h4>In Progress</h4>
+            </div>
+
+            <!-- Done Column -->
+            <div class="kanban-column" id="done" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h4>Done</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editTaskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="edit-task-title" class="form-control mb-2" placeholder="Task Title">
+                    <textarea id="edit-task-description" class="form-control mb-2" placeholder="Task Description"></textarea>
+                    <select id="edit-task-priority" class="form-select mb-2">
+                        <option value="low">Low Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="high">High Priority</option>
+                    </select>
+                    <input type="date" id="edit-task-due-date" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" id="save-task-btn" class="btn btn-primary">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        // Sidebar Toggle Functionality
+        const toggleBtn = document.getElementById('toggleBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Change the icon based on state
+            const icon = toggleBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+
+        // Mobile Menu Toggle
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && event.target !== mobileMenuBtn) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Task Management
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const addTaskBtn = document.getElementById('add-task-btn');
+            const saveTaskBtn = document.getElementById('save-task-btn');
+            const editTaskModal = new bootstrap.Modal(document.getElementById('editTaskModal'));
+            
+            // Current task being edited
+            let currentTaskCard = null;
+            
+            // Initialize the board
+            loadTasksFromLocalStorage();
+            
+            // Add Task Functionality
+            addTaskBtn.addEventListener('click', addTask);
+            
+            // Save Task Changes
+            saveTaskBtn.addEventListener('click', saveTaskChanges);
+            
+            // Report Buttons
+            document.getElementById('generate-report-btn').addEventListener('click', generateReport);
+            document.getElementById('download-report-btn').addEventListener('click', downloadReportAsPDF);
+            document.getElementById('send-report-btn').addEventListener('click', sendReport);
+        });
+        
+        function addTask() {
+            const title = document.getElementById('task-title').value.trim();
+            const description = document.getElementById('task-description').value.trim();
+            const priority = document.getElementById('task-priority').value;
+            const dueDate = document.getElementById('task-due-date').value;
+            
+            if (title && description && dueDate) {
+                const taskCard = document.createElement('div');
+                taskCard.className = 'kanban-item';
+                taskCard.draggable = true;
+                taskCard.dataset.priority = priority;
+                taskCard.dataset.dueDate = dueDate;
+                
+                taskCard.innerHTML = `
+                    <div class="task-title">${title}</div>
+                    <div class="task-description">${description}</div>
+                    <div class="priority ${priority}">${priority.toUpperCase()} PRIORITY</div>
+                    <div class="due-date">Due: ${dueDate}</div>
+                    <div class="task-actions">
+                        <button class="btn btn-sm btn-primary edit-btn"><i class="bi-pencil"></i> Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn"><i class="bi-trash"></i> Delete</button>
+                    </div>
+                `;
+                
+                document.getElementById('backlog').appendChild(taskCard);
+                
+                // Clear form
+                document.getElementById('task-title').value = '';
+                document.getElementById('task-description').value = '';
+                document.getElementById('task-due-date').value = '';
+                
+                // Add event listeners
+                addTaskEventListeners(taskCard);
+                saveTasksToLocalStorage();
+            } else {
+                alert('Please fill in all fields!');
+            }
+        }
+        
+        function addTaskEventListeners(taskCard) {
+            // Drag and drop
+            taskCard.addEventListener('dragstart', drag);
+            
+            // Edit button
+            taskCard.querySelector('.edit-btn').addEventListener('click', () => openEditModal(taskCard));
+            
+            // Delete button
+            taskCard.querySelector('.delete-btn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to delete this task?')) {
+                    taskCard.remove();
+                    saveTasksToLocalStorage();
+                }
+            });
+        }
+        
+        function openEditModal(taskCard) {
+            currentTaskCard = taskCard;
+            
+            document.getElementById('edit-task-title').value = taskCard.querySelector('.task-title').textContent;
+            document.getElementById('edit-task-description').value = taskCard.querySelector('.task-description').textContent;
+            document.getElementById('edit-task-priority').value = taskCard.dataset.priority;
+            document.getElementById('edit-task-due-date').value = taskCard.dataset.dueDate;
+            
+            editTaskModal.show();
+        }
+        
+        function saveTaskChanges() {
+            const title = document.getElementById('edit-task-title').value.trim();
+            const description = document.getElementById('edit-task-description').value.trim();
+            const priority = document.getElementById('edit-task-priority').value;
+            const dueDate = document.getElementById('edit-task-due-date').value;
+            
+            if (title && description && dueDate) {
+                currentTaskCard.querySelector('.task-title').textContent = title;
+                currentTaskCard.querySelector('.task-description').textContent = description;
+                currentTaskCard.querySelector('.priority').className = `priority ${priority}`;
+                currentTaskCard.querySelector('.priority').textContent = `${priority.toUpperCase()} PRIORITY`;
+                currentTaskCard.querySelector('.due-date').textContent = `Due: ${dueDate}`;
+                currentTaskCard.dataset.priority = priority;
+                currentTaskCard.dataset.dueDate = dueDate;
+                
+                editTaskModal.hide();
+                saveTasksToLocalStorage();
+            } else {
+                alert('Please fill in all fields!');
+            }
+        }
+        
+        // Drag and Drop Functions
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+        
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.id);
+            event.target.style.opacity = '0.4';
+        }
+        
+        function drop(event) {
+            event.preventDefault();
+            const data = event.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            
+            // Check if we're dropping on a column or another task
+            const dropTarget = event.target.classList.contains('kanban-column') ? 
+                event.target : 
+                event.target.closest('.kanban-column');
+            
+            dropTarget.appendChild(draggedElement);
+            draggedElement.style.opacity = '1';
+            saveTasksToLocalStorage();
+        }
+        
+        // Local Storage Functions
+        function saveTasksToLocalStorage() {
+            const columns = {
+                backlog: document.getElementById('backlog'),
+                todo: document.getElementById('todo'),
+                'in-progress': document.getElementById('in-progress'),
+                done: document.getElementById('done')
+            };
+            
+            const tasks = [];
+            
+            Object.entries(columns).forEach(([columnId, column]) => {
+                const columnTasks = column.querySelectorAll('.kanban-item');
+                columnTasks.forEach(task => {
+                    tasks.push({
+                        id: task.id,
+                        title: task.querySelector('.task-title').textContent,
+                        description: task.querySelector('.task-description').textContent,
+                        priority: task.dataset.priority,
+                        dueDate: task.dataset.dueDate,
+                        column: columnId
+                    });
+                });
+            });
+            
+            localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
+        }
+        
+        function loadTasksFromLocalStorage() {
+            const tasks = JSON.parse(localStorage.getItem('kanbanTasks')) || [];
+            
+            tasks.forEach(task => {
+                const taskCard = document.createElement('div');
+                taskCard.className = 'kanban-item';
+                taskCard.draggable = true;
+                taskCard.id = task.id || `task-${Date.now()}`;
+                taskCard.dataset.priority = task.priority;
+                taskCard.dataset.dueDate = task.dueDate;
+                
+                taskCard.innerHTML = `
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-description">${task.description}</div>
+                    <div class="priority ${task.priority}">${task.priority.toUpperCase()} PRIORITY</div>
+                    <div class="due-date">Due: ${task.dueDate}</div>
+                    <div class="task-actions">
+                        <button class="btn btn-sm btn-primary edit-btn"><i class="bi-pencil"></i> Edit</button>
+                        <button class="btn btn-sm btn-danger delete-btn"><i class="bi-trash"></i> Delete</button>
+                    </div>
+                `;
+                
+                document.getElementById(task.column).appendChild(taskCard);
+                addTaskEventListeners(taskCard);
+            });
+        }
+        
+        // Report Functions
+        function generateReport() {
+            const columns = {
+                backlog: document.getElementById('backlog'),
+                todo: document.getElementById('todo'),
+                'in-progress': document.getElementById('in-progress'),
+                done: document.getElementById('done')
+            };
+            
+            let reportHTML = '<h3>Task Report</h3><table class="table table-bordered"><thead><tr><th>Task</th><th>Status</th><th>Priority</th><th>Due Date</th></tr></thead><tbody>';
+            
+            Object.entries(columns).forEach(([columnId, column]) => {
+                const columnName = column.querySelector('h4').textContent;
+                const tasks = column.querySelectorAll('.kanban-item');
+                
+                tasks.forEach(task => {
+                    reportHTML += `
+                        <tr>
+                            <td>${task.querySelector('.task-title').textContent}</td>
+                            <td>${columnName}</td>
+                            <td class="${task.dataset.priority}">${task.dataset.priority.toUpperCase()}</td>
+                            <td>${task.dataset.dueDate}</td>
+                        </tr>
+                    `;
+                });
+            });
+            
+            reportHTML += '</tbody></table>';
+            document.getElementById('report').innerHTML = reportHTML;
+        }
+        
+        function downloadReportAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const columns = {
+                backlog: document.getElementById('backlog'),
+                todo: document.getElementById('todo'),
+                'in-progress': document.getElementById('in-progress'),
+                done: document.getElementById('done')
+            };
+            
+            // Get all tasks from all columns
+            const allTasks = [];
+            Object.entries(columns).forEach(([columnId, column]) => {
+                const columnName = column.querySelector('h4').textContent;
+                const tasks = column.querySelectorAll('.kanban-item');
+                
+                tasks.forEach(task => {
+                    allTasks.push({
+                        title: task.querySelector('.task-title').textContent,
+                        description: task.querySelector('.task-description').textContent,
+                        priority: task.dataset.priority,
+                        dueDate: task.dataset.dueDate,
+                        column: columnName
+                    });
+                });
+            });
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text('Kanban Board Report', 105, 15, { align: 'center' });
+            doc.setFontSize(12);
+            
+            // Add table
+            const headers = ['Task', 'Description', 'Status', 'Priority', 'Due Date'];
+            const rows = allTasks.map(task => [
+                task.title,
+                task.description,
+                task.column,
+                task.priority.toUpperCase(),
+                task.dueDate
+            ]);
+            
+            doc.autoTable({
+                head: [headers],
+                body: rows,
+                startY: 25,
+                styles: {
+                    cellPadding: 5,
+                    fontSize: 10,
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { cellWidth: 40 },
+                    1: { cellWidth: 60 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 30 }
+                }
+            });
+            
+            // Save the PDF
+            doc.save('kanban_report.pdf');
+        }
+        
+        function sendReport() {
+            alert('Report sent! (This would email the report in a real implementation)');
+        }
+
+        // Initialize sidebar state based on screen size
+        window.addEventListener('load', function() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.remove('show');
+                mainContent.classList.remove('expanded');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>

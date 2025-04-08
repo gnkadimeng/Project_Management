@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERSONAL Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css">
+    <style>
+        /* Color Palette */
+        :root {
+            --primary: #2E1A46;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary: #cdb383;
+            --secondary-light: #5dade2;
+            --secondary-dark: #a4a6a7;
+            --accent: #cdb383;
+            --success: #cdb383;
+            --warning: #cdb383;
+            --info: #cdb383;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #34495e;
+            --sidebar-active: #f8f9fa;
+            --sidebar-hover: #f1f5f9;
+            --sidebar-border: #e5e7eb;
+            --content-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+
+        body {
+            background-color: var(--content-bg);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: var(--sidebar-bg);
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-header h3,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .dropdown-toggle .bi-chevron-down,
+        .sidebar.collapsed .sidebar-footer span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .dropdown-menu {
+            position: absolute;
+            left: 70px;
+            width: 180px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 3px solid var(--secondary);
+            color: var(--secondary);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Dropdown Styling */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            width: calc(100% - 40px);
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item {
+            padding: 8px 15px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--secondary);
+        }
+
+        /* Logout Button (Fixed at Bottom) */
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .logout-btn i {
+            margin-right: 5px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        /* Welcome Box */
+        .welcome-box {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 189px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            text-align: left;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .welcome-box h3 {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .welcome-box p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        /* Dashboard Boxes */
+        .dashboard-box {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .metric-box {
+            flex: 1;
+            min-width: 0;
+            height: 120px;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            border-top: 3px solid var(--secondary);
+        }
+
+        .metric-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .metric-box:nth-child(1) { border-top-color: var(--info); }
+        .metric-box:nth-child(2) { border-top-color: var(--success); }
+        .metric-box:nth-child(3) { border-top-color: var(--warning); }
+
+        .metric-box div:first-child {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+
+        .metric-box .text-muted {
+            font-size: 0.85rem;
+        }
+
+        /* Content Boxes */
+        .content-box {
+            width: 32%;
+            height: 300px;
+            display: inline-block;
+            margin-right: 1%;
+            vertical-align: top;
+            overflow-y: auto;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .content-box h5 {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--sidebar-border);
+        }
+
+        /* Task List */
+        .task-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 3px solid var(--secondary);
+            font-size: 0.9rem;
+            background-color: var(--sidebar-active);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            background-color: var(--sidebar-hover);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .task-actions i {
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .task-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        /* Upload Box */
+        .upload-item {
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--sidebar-active);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .upload-item:hover {
+            background-color: var(--sidebar-hover);
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .upload-actions i {
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .upload-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        /* Calendar */
+        #calendar {
+            font-size: 0.9rem;
+        }
+
+        /* Profile Container */
+        .profile-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 180px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary);
+            object-fit: cover;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+            border: 2px solid var(--card-bg);
+        }
+
+        .profile-container p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Buttons */
+        button, .btn {
+            font-size: 0.9rem !important;
+            padding: 8px 15px !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary) !important;
+            border-color: var(--secondary) !important;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark) !important;
+            border-color: var(--secondary-dark) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6 !important;
+            border-color: #95a5a6 !important;
+        }
+
+        .btn-sm {
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* Task Input */
+        .task-input-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .task-input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--sidebar-border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .task-input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+
+        /* File Upload Modal */
+        .file-name-display {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 8px;
+            background-color: var(--sidebar-active);
+            border-radius: 6px;
+        }
+
+        /* Small calendar adjustments */
+        .fc .fc-toolbar-title {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .fc .fc-button {
+            padding: 0.3em 0.6em;
+            font-size: 0.9em;
+            background-color: var(--secondary) !important;
+            border-color: var(--secondary) !important;
+        }
+
+        .fc .fc-button:hover {
+            background-color: var(--secondary-dark) !important;
+            border-color: var(--secondary-dark) !important;
+        }
+
+        /* Animation */
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            animation: confetti 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .content-box {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+            
+            .dashboard-box {
+                flex-wrap: wrap;
+            }
+            
+            .metric-box {
+                min-width: calc(50% - 10px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .metric-box {
+                min-width: 100%;
+            }
+            
+            .profile-container {
+                width: 160px;
+                right: 10px;
+            }
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            display: none;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="toggle-btn" id="toggleBtn">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        
+            
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="updatedDashboard.html" class="nav-link active"><i class="bi bi-house"></i>
+                    <span>Home</span></a></li>
+            <li><a href="updatedkaban.html" class="nav-link"><i class="bi bi-kanban"></i> <span>Kanban Board</span></a>
+            </li>
+            <li><a href="Elearning.html" class="nav-link"><i class="bi bi-collection-play"></i>
+                    <span>e-Learning</span></a></li>
+            <li><a href="Templates.html" class="nav-link"><i class="bi bi-book"></i> <span>Templates</span></a></li>
+            <li><a href="#" class="nav-link"><i class="bi bi-graph-up"></i> <span>Analytics</span></a></li>
+            <li class="nav-item dropdown">
+                <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="collapse" data-bs-target="#projectSubmenu" aria-expanded="false">
+                  <i class="bi bi-people"></i> <span>Project Management</span>
+                </a>
+                <ul class="collapse list-unstyled ps-4" id="projectSubmenu">
+                  <li><a href="journals.html" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span>Paper</span></a></li>
+                  <li><a href="books.html" class="nav-link"><i class="bi bi-book"></i> <span>Books</span></a></li>
+                  <li><a href="app_kanban.html" class="nav-link"><i class="bi bi-kanban"></i> <span>Development</span></a></li>
+                </ul>
+              </li>
+              
+            <li><a href="#" class="nav-link"><i class="bi bi-gear"></i> <span>Settings</span></a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="#" class="logout-btn"><i class="bi bi-box-arrow-left"></i> <span>Logout</span></a>
+        </div>
+    </div>
+
+    <!-- Profile (Top Right) -->
+    <div class="profile-container">
+        <img src="woman-profile.avif" class="profile-img">
+        <span class="status-badge"></span>
+        <h5>P Mahure</h5>
+        <p class="text-muted">Software Engineer</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Welcome Box -->
+        <div class="welcome-box">
+            <h3>Welcome Back, P Mahure!</h3>
+            <p>You have 3 tasks to complete today. Let's make progress!</p>
+            <div class="progress mt-2" style="width: 75%; height: 10px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" ></div>
+            </div>
+        </div>
+        
+        <!-- Top Metrics Row -->
+        <div class="dashboard-box">
+            <div class="metric-box">
+                <div>Total Projects</div>
+                <div class="metric-value"></div>
+                <div class="text-muted"></div>
+            </div>
+            
+            <div class="metric-box">
+                <div>Completed</div>
+                <div class="metric-value"></div>
+                <div class="text-muted"></div>
+            </div>
+            
+            <div class="metric-box">
+                <div>Progress</div>
+                <div class="metric-value"></div>
+                <div class="progress mt-2" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Boxes Row -->
+        <div class="dashboard-box">
+            <div class="content-box">
+                <h5>Today's Tasks</h5>
+                <div class="task-input-container">
+                    <input type="text" class="task-input" placeholder="New task...">
+                    <button class="btn btn-primary btn-sm" id="add-task-btn">Add</button>
+                </div>
+                <div id="tasks-list">
+                    <div class="task-item">
+                        <span>Complete project proposal</span>
+                        <div class="task-actions">
+                            <i class="bi-check-circle text-success" title="Mark as done"></i>
+                            <i class="bi-trash text-danger" title="Delete"></i>
+                        </div>
+                    </div>
+                    <div class="task-item">
+                        <span>Review team submissions</span>
+                        <div class="task-actions">
+                            <i class="bi-check-circle text-success" title="Mark as done"></i>
+                            <i class="bi-trash text-danger" title="Delete"></i>
+                        </div>
+                    </div>
+                    <div class="task-item">
+                        <span>Client meeting at 2pm</span>
+                        <div class="task-actions">
+                            <i class="bi-check-circle text-success" title="Mark as done"></i>
+                            <i class="bi-trash text-danger" title="Delete"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <h5>Recent Uploads</h5>
+                <button class="btn btn-primary btn-sm w-100 mb-3" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <i class="bi-upload"></i> Upload File
+                </button>
+                <div id="uploads-list">
+                    <div class="upload-item">
+                        <span>Project.pdf</span>
+                        <div class="upload-actions">
+                            <i class="bi-pencil text-primary" title="Rename"></i>
+                            <i class="bi-trash text-danger" title="Delete"></i>
+                        </div>
+                    </div>
+                    <div class="upload-item">
+                        <span>Report.docx</span>
+                        <div class="upload-actions">
+                            <i class="bi-pencil text-primary" title="Rename"></i>
+                            <i class="bi-trash text-danger" title="Delete"></i>
+                        </div>
+                    </div>
+                    <div class="upload-item">
+                        <span>Presentation.pptx</span>
+                        <div class="upload-actions">
+                            <i class="bi-pencil text-primary" title="Rename"></i>
+                            <i class="bi-trash text-danger" title="Delete"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-box">
+                <div id="calendar"></div>
+                <button class="btn btn-primary btn-sm w-100 mt-3" id="add-event-btn">
+                    <i class="bi-plus-circle"></i> Add Event
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Upload File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="file-name" class="form-label">File Name</label>
+                        <input type="text" class="form-control" id="file-name" placeholder="Enter file name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="file-upload" class="form-label">Select File</label>
+                        <input class="form-control" type="file" id="file-upload">
+                    </div>
+                    <div class="file-name-display" id="selected-file-name"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-upload">Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div class="modal fade" id="eventModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="event-title" class="form-label">Event Title</label>
+                        <input type="text" class="form-control" id="event-title" placeholder="Enter event title">
+                    </div>
+                    <div class="mb-3">
+                        <label for="event-date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="event-date">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-event">Add Event</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    
+    <script>
+        // Initialize Calendar
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+                },
+                height: 'auto',
+                events: [
+                    {
+                        title: 'Project Deadline',
+                        start: new Date(),
+                        color: '#e74c3c'
+                    },
+                    {
+                        title: 'Team Meeting',
+                        start: new Date(new Date().setDate(new Date().getDate() + 2)),
+                        color: '#3498db'
+                    }
+                ]
+            });
+            calendar.render();
+
+            // Store calendar instance for later use
+            window.calendar = calendar;
+        });
+
+        // Sidebar Toggle Functionality
+        const toggleBtn = document.getElementById('toggleBtn');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Change the icon based on state
+            const icon = toggleBtn.querySelector('i');
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('bi-chevron-left');
+                icon.classList.add('bi-chevron-right');
+            } else {
+                icon.classList.remove('bi-chevron-right');
+                icon.classList.add('bi-chevron-left');
+            }
+        });
+
+        // Mobile Menu Toggle
+        mobileMenuBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('show');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && event.target !== mobileMenuBtn) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Task Management
+        document.getElementById('add-task-btn').addEventListener('click', function() {
+            const taskInput = document.querySelector('.task-input');
+            const taskText = taskInput.value.trim();
+            
+            if (taskText) {
+                const taskId = 'task-' + Date.now();
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.id = taskId;
+                taskItem.innerHTML = `
+                    <span>${taskText}</span>
+                    <div class="task-actions">
+                        <i class="bi-check-circle text-success" title="Mark as done" onclick="completeTask('${taskId}')"></i>
+                        <i class="bi-trash text-danger" title="Delete" onclick="removeTask('${taskId}')"></i>
+                    </div>
+                `;
+                document.getElementById('tasks-list').appendChild(taskItem);
+                taskInput.value = '';
+                saveTasks();
+            }
+        });
+
+        // Allow pressing Enter to add task
+        document.querySelector('.task-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('add-task-btn').click();
+            }
+        });
+
+        // Complete task with animation
+        function completeTask(taskId) {
+            const taskItem = document.getElementById(taskId);
+            taskItem.style.textDecoration = 'line-through';
+            taskItem.style.opacity = '0.6';
+            
+            // Create confetti effect
+            createConfetti();
+            
+            // Remove task after animation
+            setTimeout(() => {
+                taskItem.remove();
+                saveTasks();
+            }, 1000);
+        }
+
+        // Remove task
+        function removeTask(taskId) {
+            document.getElementById(taskId).remove();
+            saveTasks();
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            const tasks = [];
+            document.querySelectorAll('#tasks-list .task-item').forEach(task => {
+                tasks.push({
+                    text: task.querySelector('span').textContent,
+                    completed: task.style.textDecoration === 'line-through'
+                });
+            });
+            localStorage.setItem('dashboard-tasks', JSON.stringify(tasks));
+        }
+
+        // Load tasks from localStorage
+        function loadTasks() {
+            const savedTasks = JSON.parse(localStorage.getItem('dashboard-tasks')) || [];
+            const tasksList = document.getElementById('tasks-list');
+            tasksList.innerHTML = '';
+            
+            savedTasks.forEach(task => {
+                const taskId = 'task-' + Date.now();
+                const taskItem = document.createElement('div');
+                taskItem.className = 'task-item';
+                taskItem.id = taskId;
+                taskItem.innerHTML = `
+                    <span>${task.text}</span>
+                    <div class="task-actions">
+                        <i class="bi-check-circle text-success" title="Mark as done" onclick="completeTask('${taskId}')"></i>
+                        <i class="bi-trash text-danger" title="Delete" onclick="removeTask('${taskId}')"></i>
+                    </div>
+                `;
+                
+                if (task.completed) {
+                    taskItem.style.textDecoration = 'line-through';
+                    taskItem.style.opacity = '0.6';
+                }
+                
+                tasksList.appendChild(taskItem);
+            });
+        }
+
+        // File Upload Management
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || 'No file selected';
+            document.getElementById('selected-file-name').textContent = `Selected: ${fileName}`;
+        });
+
+        document.getElementById('confirm-upload').addEventListener('click', function() {
+            const fileNameInput = document.getElementById('file-name');
+            const fileUpload = document.getElementById('file-upload');
+            const fileName = fileNameInput.value.trim() || fileUpload.files[0]?.name || 'Untitled';
+            
+            if (fileUpload.files.length > 0) {
+                const fileId = 'file-' + Date.now();
+                const uploadItem = document.createElement('div');
+                uploadItem.className = 'upload-item';
+                uploadItem.id = fileId;
+                uploadItem.innerHTML = `
+                    <span>${fileName}</span>
+                    <div class="upload-actions">
+                        <i class="bi-pencil text-primary" title="Rename" onclick="renameFile('${fileId}')"></i>
+                        <i class="bi-trash text-danger" title="Delete" onclick="removeFile('${fileId}')"></i>
+                    </div>
+                `;
+                document.getElementById('uploads-list').appendChild(uploadItem);
+                
+                // Reset form
+                fileNameInput.value = '';
+                fileUpload.value = '';
+                document.getElementById('selected-file-name').textContent = '';
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+                
+                saveUploads();
+            } else {
+                alert('Please select a file to upload');
+            }
+        });
+
+        // Rename file
+        function renameFile(fileId) {
+            const fileItem = document.getElementById(fileId);
+            const currentName = fileItem.querySelector('span').textContent;
+            const newName = prompt('Enter new file name:', currentName);
+            
+            if (newName && newName !== currentName) {
+                fileItem.querySelector('span').textContent = newName;
+                saveUploads();
+            }
+        }
+
+        // Remove file
+        function removeFile(fileId) {
+            if (confirm('Are you sure you want to delete this file?')) {
+                document.getElementById(fileId).remove();
+                saveUploads();
+            }
+        }
+
+        // Save uploads to localStorage
+        function saveUploads() {
+            const uploads = [];
+            document.querySelectorAll('#uploads-list .upload-item').forEach(upload => {
+                uploads.push({
+                    name: upload.querySelector('span').textContent
+                });
+            });
+            localStorage.setItem('dashboard-uploads', JSON.stringify(uploads));
+        }
+
+        // Load uploads from localStorage
+        function loadUploads() {
+            const savedUploads = JSON.parse(localStorage.getItem('dashboard-uploads')) || [];
+            const uploadsList = document.getElementById('uploads-list');
+            uploadsList.innerHTML = '';
+            
+            savedUploads.forEach(upload => {
+                const fileId = 'file-' + Date.now();
+                const uploadItem = document.createElement('div');
+                uploadItem.className = 'upload-item';
+                uploadItem.id = fileId;
+                uploadItem.innerHTML = `
+                    <span>${upload.name}</span>
+                    <div class="upload-actions">
+                        <i class="bi-pencil text-primary" title="Rename" onclick="renameFile('${fileId}')"></i>
+                        <i class="bi-trash text-danger" title="Delete" onclick="removeFile('${fileId}')"></i>
+                    </div>
+                `;
+                uploadsList.appendChild(uploadItem);
+            });
+        }
+
+        // Calendar Event Management
+        document.getElementById('add-event-btn').addEventListener('click', function() {
+            const eventModal = new bootstrap.Modal(document.getElementById('eventModal'));
+            document.getElementById('event-title').value = '';
+            document.getElementById('event-date').valueAsDate = new Date();
+            eventModal.show();
+        });
+
+        document.getElementById('confirm-event').addEventListener('click', function() {
+            const eventTitle = document.getElementById('event-title').value.trim();
+            const eventDate = document.getElementById('event-date').value;
+            
+            if (eventTitle && eventDate) {
+                window.calendar.addEvent({
+                    title: eventTitle,
+                    start: eventDate,
+                    color: '#e74c3c'
+                });
+                
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('eventModal')).hide();
+            } else {
+                alert('Please enter both event title and date');
+            }
+        });
+
+       // Confetti animation
+        function createConfetti() {
+            const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '100vh';
+                confetti.style.width = Math.random() * 10 + 5 + 'px';
+                confetti.style.height = Math.random() * 10 + 5 + 'px';
+                confetti.style.animationDuration = Math.random() * 1 + 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                // Remove confetti after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 1000);
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', function() {
+            loadTasks();
+            loadUploads();
+            
+            // Initialize sidebar state based on screen size
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.remove('show');
+                mainContent.classList.remove('expanded');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
