@@ -30,42 +30,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Task creation
   saveTaskBtn.addEventListener("click", () => {
+    console.log("clicked")
     const title = document.getElementById("taskTitle").value.trim();
+    const description = document.getElementById("task-description").value.trim();
     const priority = document.getElementById("taskPriority").value;
     const dueDate = document.getElementById("taskDate").value;
     const frontend = document.getElementById("frontendTag").checked;
     const backend = document.getElementById("backendTag").checked;
+    const uxui = document.getElementById("uxuiTag").checked;
+    const architecture = document.getElementById("architectureTag").checked;
+    const testing = document.getElementById("testingTag").checked;
+    const deployment = document.getElementById("deploymentTag").checked;
 
     if (!title || !dueDate) {
-      alert("Please enter all required fields.");
-      return;
+        alert("Please enter Project Name and Due Date.");
+        return;
     }
+
+    // Create task ID
+    const taskId = `task-${Date.now()}`;
 
     const taskCard = document.createElement("div");
     taskCard.className = "kanban-item";
     taskCard.draggable = true;
+    taskCard.id = taskId;
     taskCard.innerHTML = `
-      <div class="task-title">${title}</div>
-      <div class="priority ${priority}">${priority.toUpperCase()} PRIORITY</div>
-      <div class="due-date">Due: ${dueDate}</div>
-      <div class="task-tags">
-        ${frontend ? '<span class="badge bg-info me-1">Frontend</span>' : ''}
-        ${backend ? '<span class="badge bg-warning text-dark">Backend</span>' : ''}
-      </div>
+        <div class="task-title">${title}</div>
+        ${description ? `<div class="task-description">${description}</div>` : ''}
+        <div class="priority ${priority}">${priority.toUpperCase()} PRIORITY</div>
+        <div class="due-date">Due: ${dueDate}</div>
+        <div class="task-tags">
+            ${uxui ? '<span class="badge bg-primary me-1">UX/UI</span>' : ''}
+            ${architecture ? '<span class="badge bg-secondary me-1">Architecture</span>' : ''}
+            ${frontend ? '<span class="badge bg-info me-1">Frontend</span>' : ''}
+            ${backend ? '<span class="badge bg-warning text-dark me-1">Backend</span>' : ''}
+            ${testing ? '<span class="badge bg-success me-1">Testing</span>' : ''}
+            ${deployment ? '<span class="badge bg-danger me-1">Deployment</span>' : ''}
+        </div>
     `;
+
+    // Add drag event
+    taskCard.addEventListener("dragstart", function(e) {
+        e.dataTransfer.setData("text/plain", taskCard.id);
+        taskCard.style.opacity = "0.4";
+    });
 
     document.getElementById("todo").appendChild(taskCard);
 
     // Clear form
     document.getElementById("taskTitle").value = "";
-    document.getElementById("taskPriority").value = "low";
+    document.getElementById("task-description").value = "";
+    document.getElementById("taskPriority").value = "medium";
     document.getElementById("taskDate").value = "";
+    document.getElementById("uxuiTag").checked = false;
+    document.getElementById("architectureTag").checked = false;
     document.getElementById("frontendTag").checked = false;
     document.getElementById("backendTag").checked = false;
+    document.getElementById("testingTag").checked = false;
+    document.getElementById("deploymentTag").checked = false;
 
     saveTasksToLocalStorage();
-  });
-
+});
   // Report generation buttons
   document.getElementById("generate-report-btn").addEventListener("click", generateReport);
   document.getElementById("download-report-btn").addEventListener("click", downloadReportAsPDF);
@@ -111,7 +136,7 @@ function saveTasksToLocalStorage() {
 
 function loadTasksFromLocalStorage() {
   const saved = JSON.parse(localStorage.getItem("kanbanTasks")) || [];
-
+  console.log("saved ",saved)
   saved.forEach(task => {
     const taskCard = document.createElement("div");
     taskCard.className = "kanban-item";

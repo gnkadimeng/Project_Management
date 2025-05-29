@@ -1,0 +1,107 @@
+:root {
+    --primary: #2c3e50;
+    --primary-light: #34495e;
+    --secondary: #3498db;
+    --success: #28a745;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+}
+
+body {
+    background-color: #f5f7fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-header {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-analytics {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.3s;
+    cursor: pointer;
+}
+
+.card-analytics:hover {
+    transform: translateY(-5px);
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.progress-bar-software {
+    background-color: #3498db;
+}
+
+.progress-bar-research {
+    background-color: #2ecc71;
+}
+
+.progress-bar-books {
+    background-color: #9b59b6;
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-excellent {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-normal {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.finance-card {
+    border-left: 4px solid var(--primary);
+}
+
+.finance-icon {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.recent-activity {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.recent-activity li {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.recent-activity li:last-child {
+    border-bottom: none;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.modal-animation {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}

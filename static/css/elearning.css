@@ -1,0 +1,78 @@
+/* Color Palette and Layout */
+:root {
+    --primary: #2E1A46;
+    --primary-dark: #1a252f;
+    --secondary: #cdb383;
+    --secondary-dark: #2E1A46;
+    --accent: #e74c3c;
+    --content-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-primary: #2c3e50;
+    --sidebar-bg: #ffffff;
+    --sidebar-text: #34495e;
+    --sidebar-hover: #f1f5f9;
+    --sidebar-border: #e5e7eb;
+}
+
+
+/* Cards */
+.resource-card {
+    background-color: var(--card-bg);
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.resource-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: var(--accent);
+    color: white;
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.platform-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}
+
+/* Filter Chips */
+.filter-chip {
+    background-color: var(--sidebar-hover);
+    padding: 5px 15px;
+    border-radius: 20px;
+    margin: 0 10px 10px 0;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.filter-chip:hover,
+.filter-chip.active {
+    background-color: var(--secondary);
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .sidebar.show {
+        transform: translateX(0);
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}

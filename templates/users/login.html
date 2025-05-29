@@ -1,31 +1,104 @@
 {% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Login | Project Manager</title>
-  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Login / Register</title>
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:400,800" rel="stylesheet">
+	<link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
+
 <body>
+	
+	<div class="mega-container">
+		<div class="container" id="container">
+			<!-- <img src="{% static 'img/2.png' %}" alt="Background"> -->
 
-<div class="login-container">
-  <h1>👋 Welcome Back</h1>
-  <p class="subtitle">Login to continue managing your projects</p>
+			<!-- Sign Up Form -->
+			<div class="form-container sign-up-container">
+				<form method="POST" action="{% url 'register' %}">
+					{% csrf_token %}
+					<h1>Create Account</h1>
 
-  {% if messages %}
-    {% for message in messages %}
-      <p class="msg">{{ message }}</p>
-    {% endfor %}
-  {% endif %}
+					{% if form.errors %}
+						<div style="color: red;">
+							{{ form.errors }}
+						</div>
+					{% endif %}
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">🔐 Login</button>
-  </form>
+					<input type="text" name="username" placeholder="Username" required/>
+					<input type="email" name="email" placeholder="Email" required/>
+					<input type="password" name="password1" placeholder="Password" required/>
+					<input type="password" name="password2" placeholder="Confirm Password" required/>
+					
+					<select name="role" required>
+						<option value="">Select Role</option>
+						<option value="admin">Admin</option>
+						<option value="manager">Project Manager</option>
+						<option value="staff">Staff</option>
+						<option value="student">Student</option>
+					</select>
 
-  <p class="note">Don't have an account? Contact your Project Manager.</p>
-</div>
+					<button type="submit">Sign Up</button>
+				</form>
+			</div>
 
+			<!-- Sign In Form -->
+			<div class="form-container sign-in-container">
+				<form method="POST" action="{% url 'login' %}">
+					{% csrf_token %}
+					<h1>Sign in</h1>
+
+					{% if form.errors %}
+						<div style="color: red;">
+							{{ form.errors }}
+						</div>
+					{% endif %}
+
+					<input type="text" name="username" placeholder="Username" required/>
+					<input type="password" name="password" placeholder="Password" required/>
+					<a href="#">Forgot your password?</a>
+					<button type="submit">Sign In</button>
+				</form>
+			</div>
+
+			<!-- Overlay Panels -->
+			<div class="overlay-container">
+				<div class="overlay">
+					<div class="overlay-panel overlay-left">
+						<h1>Welcome Back!</h1>
+						<p>To keep connected with us please login with your personal info</p>
+						<button class="ghost" id="signIn">Sign In</button>
+					</div>
+					<div class="overlay-panel overlay-right">
+						<h1>Hello, Friend!</h1>
+						<p>Enter your personal details and start journey with us</p>
+						<button class="ghost" id="signUp">Sign Up</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer>
+		</footer>
+	</div>
+
+	<script>
+		const signUpButton = document.getElementById('signUp');
+		const signInButton = document.getElementById('signIn');
+		const container = document.getElementById('container');
+
+		signUpButton.addEventListener('click', () => {
+			container.classList.add("right-panel-active");
+		});
+
+		signInButton.addEventListener('click', () => {
+			container.classList.remove("right-panel-active");
+		});
+	</script>
 </body>
+
 </html>

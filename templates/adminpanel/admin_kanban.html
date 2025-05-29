@@ -1,0 +1,1122 @@
+{% extends 'adminpanel/index.html' %}
+{% load static %}
+
+{% block title %}Kanban{% endblock %}
+
+{% block content %}
+
+    <style>
+        /* Color Palette */
+        :root {
+            --primary: #F26522;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary: #e4963c82;
+            --secondary-light: #F26522;
+            --secondary-dark: #F26522;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --info: #F26522;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --sidebar-bg: #ffffff84;
+            --sidebar-text: #676666;
+            --sidebar-hover: #F26522;
+            --sidebar-active: #ffffff60;
+            --sidebar-border: #e5e7eb;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+        :root {
+            --orange: #F26522;
+            --purple: rgb(75, 3, 81);
+            --light-orange: #F26522;
+            --light-purple: rgb(75, 3, 81);
+            --white: #FFFFFF;
+            --light-gray: #F5F5F5;
+        }
+        body {
+        background-image: url("{% static 'img/2.png' %}");
+        color: var(--text-primary);
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .mega-container {
+            background-color: #ffffffdc;
+            margin-top: -24px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: rgba(255, 255, 255, 0.416);
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-header h3,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .dropdown-toggle .bi-chevron-down,
+        .sidebar.collapsed .sidebar-footer span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .dropdown-menu {
+            position: absolute;
+            left: 70px;
+            width: 180px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.342);
+            color: white;
+            text-align: center;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: none;
+            border: none;
+            color: var(--sidebar-text);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 3px solid var(--secondary);
+            color: whitesmoke;
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Logout Button */
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color : #575757;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .logout-btn i {
+            margin-right: 5px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+      /* Welcome Box */
+      .welcome-box {
+    background-image: linear-gradient(
+        to right, 
+        rgb(255, 255, 255), 
+        rgb(253, 253, 253), 
+        rgba(244, 244, 244, 0.858)
+    ), 
+    url("{% static 'img/freepik__upload__83338.png' %}");
+    background-size: cover;
+    background-repeat: no-repeat;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: **30px**; /* Increased */
+    margin-top: 20px;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+        .welcome-box h3 {
+            color: rgb(107, 106, 107);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .welcome-box p {
+            color: rgb(35, 1, 1);
+            margin-bottom: 20px;
+        }
+
+        /* Kanban Board Styles */
+        .kanban-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+        
+        .kanban-column {
+            flex: 1;
+            min-width: 250px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .kanban-column h4 {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .kanban-task {
+            background-color: white;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: move;
+            border-left: 4px solid #6c757d;
+        }
+        
+        .kanban-task.low {
+            border-left-color: #28a745;
+        }
+        
+        .kanban-task.medium {
+            border-left-color: #ffc107;
+        }
+        
+        .kanban-task.high {
+            border-left-color: #dc3545;
+        }
+        
+        .kanban-task.overdue {
+            border-left-color: #dc3545;
+        }
+        
+        .kanban-task.overdue .task-title {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .task-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .task-description {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        
+        .task-due-date {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        
+        .task-priority {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .priority-low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .priority-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .priority-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .task-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .task-tag {
+            background-color: #e2e3e5;
+            color: #383d41;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        
+        .task-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .task-actions button {
+            background: none;
+            border: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .task-actions button:hover {
+            color: #343a40;
+        }
+        
+        .subtask-list {
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #e9ecef;
+        }
+        
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .subtask-checkbox {
+            margin-right: 8px;
+        }
+        
+        .subtask-text {
+            flex-grow: 1;
+            font-size: 0.85rem;
+        }
+        
+        .subtask-completed {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        
+        .add-subtask {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        .add-subtask input {
+            flex-grow: 1;
+            margin-right: 5px;
+            font-size: 0.85rem;
+            padding: 5px;
+        }
+        
+        /* Buttons */
+        button,
+        .btn {
+            font-size: 0.9rem !important;
+            padding: 8px 15px !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-primary {
+            background-color: rgba(128, 128, 128, 0.249) !important;
+            border-color: var(--secondary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark) !important;
+            border-color: var(--secondary-dark) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6 !important;
+            border-color: #95a5a6 !important;
+        }
+
+        .btn-sm {
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .kanban-container {
+                flex-direction: column;
+            }
+            
+            .kanban-column {
+                min-width: 100%;
+            }
+        }
+        
+        .welimage {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .welimage img {
+            max-width: 300px;
+            height: auto;
+        }
+    </style>
+
+
+            <!-- Welcome Box -->
+            <div class="welcome-box">
+                <h3>Kanban Board!</h3>
+                <p>Organize your tasks efficiently with the Kanban method.</p>
+                <div class="progress mt-2" style="width: 75%; height: 10px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                </div>
+            </div>
+
+            <div class="container-fluid py-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Main Task Fields -->
+                            <div class="col-md-3">
+                                <input type="text" id="taskTitle" class="form-control" placeholder="Project Name">
+                            </div>
+                            <div class="col-md-3">
+                                <textarea id="task-description" class="form-control" placeholder="Task Name" rows="1"></textarea>
+                            </div>
+                            <div class="col-md-2">
+                                <select id="taskPriority" class="form-select">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" id="taskDate" class="form-control">
+                            </div>
+                            
+                            <!-- Task Type Checkboxes -->
+                            <div class="col-md-12 mt-3">
+                                <div class="d-flex flex-wrap gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="documentTag">
+                                        <label class="form-check-label" for="documentTag">Document</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="meetingTag">
+                                        <label class="form-check-label" for="meetingTag">Meeting</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="presentationTag">
+                                        <label class="form-check-label" for="presentationTag">Presentation</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="reportTag">
+                                        <label class="form-check-label" for="reportTag">Report</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="col-12 text-center mt-4">
+                                <button class="btn btn-primary px-5" id="saveTask">Add Task</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kanban Board -->
+                <div class="kanban-container d-flex gap-4">
+                    <div class="kanban-column" id="todo">
+                        <h4>To Do</h4>
+                    </div>
+                    <div class="kanban-column" id="in-progress">
+                        <h4>In Progress</h4>
+                    </div>
+                    <div class="kanban-column" id="review">
+                        <h4>Review</h4>
+                    </div>
+                    <div class="kanban-column" id="complete">
+                        <h4>Complete</h4>
+                    </div>
+                </div>
+                
+                <div class="mb-4 d-flex justify-content-center">
+                    <button id="generate-report-btn" class="btn btn-primary me-2">Generate Report</button>
+                    <button id="download-report-btn" class="btn btn-primary me-2">Download Report</button>
+                    <button id="send-report-btn" class="btn btn-primary">Send Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Task Modal -->
+        <div class="modal fade" id="editTaskModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="edit-task-title" class="form-control mb-2" placeholder="Project Name">
+                        <textarea id="edit-task-description" class="form-control mb-2" placeholder="Task Name"></textarea>
+                        <select id="edit-task-priority" class="form-select mb-2">
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                        <input type="date" id="edit-task-due-date" class="form-control mb-2">
+                        
+                        <!-- Task Type Checkboxes -->
+                        <div class="d-flex flex-wrap gap-3 mt-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit-documentTag">
+                                <label class="form-check-label" for="edit-documentTag">Document</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit-meetingTag">
+                                <label class="form-check-label" for="edit-meetingTag">Meeting</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit-presentationTag">
+                                <label class="form-check-label" for="edit-presentationTag">Presentation</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="edit-reportTag">
+                                <label class="form-check-label" for="edit-reportTag">Report</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Subtasks Section -->
+                        <div class="mt-3">
+                            <h6>Subtasks</h6>
+                            <div id="edit-subtask-list" class="subtask-list"></div>
+                            <div class="add-subtask">
+                                <input type="text" id="edit-new-subtask" class="form-control form-control-sm" placeholder="Add subtask">
+                                <button id="edit-add-subtask-btn" class="btn btn-sm btn-primary">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" id="save-task-btn" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sidebar toggle functionality
+            const toggleBtn = document.getElementById('toggleBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                const icon = toggleBtn.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.classList.remove('bi-chevron-left');
+                    icon.classList.add('bi-chevron-right');
+                } else {
+                    icon.classList.remove('bi-chevron-right');
+                    icon.classList.add('bi-chevron-left');
+                }
+            });
+            
+            mobileMenuBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('show');
+            });
+            
+            // Initialize tasks array
+            let tasks = JSON.parse(localStorage.getItem('kanbanTasks')) || [];
+            
+            // DOM elements
+            const saveTaskBtn = document.getElementById('saveTask');
+            const taskTitleInput = document.getElementById('taskTitle');
+            const taskDescriptionInput = document.getElementById('task-description');
+            const taskPrioritySelect = document.getElementById('taskPriority');
+            const taskDateInput = document.getElementById('taskDate');
+            
+            // Task type checkboxes
+            const documentTag = document.getElementById('documentTag');
+            const meetingTag = document.getElementById('meetingTag');
+            const presentationTag = document.getElementById('presentationTag');
+            const reportTag = document.getElementById('reportTag');
+            
+            // Kanban columns
+            const todoColumn = document.getElementById('todo');
+            const inProgressColumn = document.getElementById('in-progress');
+            const reviewColumn = document.getElementById('review');
+            const completeColumn = document.getElementById('complete');
+            
+            // Edit modal elements
+            const editTaskModal = new bootstrap.Modal(document.getElementById('editTaskModal'));
+            const editTaskTitle = document.getElementById('edit-task-title');
+            const editTaskDescription = document.getElementById('edit-task-description');
+            const editTaskPriority = document.getElementById('edit-task-priority');
+            const editTaskDueDate = document.getElementById('edit-task-due-date');
+            const editDocumentTag = document.getElementById('edit-documentTag');
+            const editMeetingTag = document.getElementById('edit-meetingTag');
+            const editPresentationTag = document.getElementById('edit-presentationTag');
+            const editReportTag = document.getElementById('edit-reportTag');
+            const editSubtaskList = document.getElementById('edit-subtask-list');
+            const editNewSubtask = document.getElementById('edit-new-subtask');
+            const editAddSubtaskBtn = document.getElementById('edit-add-subtask-btn');
+            const saveTaskBtnModal = document.getElementById('save-task-btn');
+            
+            let currentEditingTaskId = null;
+            
+            // Generate a unique ID for tasks
+            function generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+            
+            // Save tasks to localStorage
+            function saveTasks() {
+                localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
+            }
+            
+            // Render all tasks
+            function renderTasks() {
+                // Clear all columns
+                todoColumn.innerHTML = '<h4>To Do</h4>';
+                inProgressColumn.innerHTML = '<h4>In Progress</h4>';
+                reviewColumn.innerHTML = '<h4>Review</h4>';
+                completeColumn.innerHTML = '<h4>Complete</h4>';
+                
+                // Get current date for overdue check
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Render each task in the appropriate column
+                tasks.forEach(task => {
+                    const taskElement = createTaskElement(task);
+                    
+                    // Check if task is overdue
+                    if (task.dueDate) {
+                        const dueDate = new Date(task.dueDate);
+                        dueDate.setHours(0, 0, 0, 0);
+                        
+                        if (dueDate < today && task.status !== 'complete') {
+                            taskElement.classList.add('overdue');
+                        }
+                    }
+                    
+                    // Append to the appropriate column
+                    switch(task.status) {
+                        case 'todo':
+                            todoColumn.appendChild(taskElement);
+                            break;
+                        case 'in-progress':
+                            inProgressColumn.appendChild(taskElement);
+                            break;
+                        case 'review':
+                            reviewColumn.appendChild(taskElement);
+                            break;
+                        case 'complete':
+                            completeColumn.appendChild(taskElement);
+                            break;
+                    }
+                });
+                
+                // Make tasks draggable
+                makeTasksDraggable();
+            }
+            
+            // Create a task element
+            function createTaskElement(task) {
+                const taskElement = document.createElement('div');
+                taskElement.className = `kanban-task ${task.priority}`;
+                taskElement.dataset.taskId = task.id;
+                taskElement.draggable = true;
+                
+                // Task title (will be red if overdue)
+                const titleElement = document.createElement('div');
+                titleElement.className = 'task-title';
+                titleElement.textContent = task.title;
+                
+                // Task description
+                const descriptionElement = document.createElement('div');
+                descriptionElement.className = 'task-description';
+                descriptionElement.textContent = task.description;
+                
+                // Due date
+                const dueDateElement = document.createElement('div');
+                dueDateElement.className = 'task-due-date';
+                dueDateElement.textContent = task.dueDate ? `Due: ${formatDate(task.dueDate)}` : 'No due date';
+                
+                // Priority
+                const priorityElement = document.createElement('div');
+                priorityElement.className = `task-priority priority-${task.priority}`;
+                priorityElement.textContent = `${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority`;
+                
+                // Tags
+                const tagsElement = document.createElement('div');
+                tagsElement.className = 'task-tags';
+                
+                if (task.document) tagsElement.appendChild(createTagElement('Document'));
+                if (task.meeting) tagsElement.appendChild(createTagElement('Meeting'));
+                if (task.presentation) tagsElement.appendChild(createTagElement('Presentation'));
+                if (task.report) tagsElement.appendChild(createTagElement('Report'));
+                
+                // Subtasks
+                const subtaskContainer = document.createElement('div');
+                if (task.subtasks && task.subtasks.length > 0) {
+                    const subtaskList = document.createElement('div');
+                    subtaskList.className = 'subtask-list';
+                    
+                    task.subtasks.forEach(subtask => {
+                        const subtaskItem = document.createElement('div');
+                        subtaskItem.className = 'subtask-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'subtask-checkbox';
+                        checkbox.checked = subtask.completed;
+                        checkbox.addEventListener('change', function() {
+                            subtask.completed = this.checked;
+                            saveTasks();
+                        });
+                        
+                        const subtaskText = document.createElement('span');
+                        subtaskText.className = 'subtask-text' + (subtask.completed ? ' subtask-completed' : '');
+                        subtaskText.textContent = subtask.text;
+                        
+                        subtaskItem.appendChild(checkbox);
+                        subtaskItem.appendChild(subtaskText);
+                        subtaskList.appendChild(subtaskItem);
+                    });
+                    
+                    subtaskContainer.appendChild(subtaskList);
+                }
+                
+                // Add subtask button (only for incomplete tasks)
+                if (task.status !== 'complete') {
+                    const addSubtaskDiv = document.createElement('div');
+                    addSubtaskDiv.className = 'add-subtask';
+                    
+                    const subtaskInput = document.createElement('input');
+                    subtaskInput.type = 'text';
+                    subtaskInput.placeholder = 'Add subtask';
+                    subtaskInput.className = 'form-control form-control-sm';
+                    
+                    const addSubtaskBtn = document.createElement('button');
+                    addSubtaskBtn.className = 'btn btn-sm btn-primary';
+                    addSubtaskBtn.textContent = 'Add';
+                    addSubtaskBtn.addEventListener('click', function() {
+                        if (subtaskInput.value.trim()) {
+                            if (!task.subtasks) task.subtasks = [];
+                            task.subtasks.push({
+                                text: subtaskInput.value.trim(),
+                                completed: false
+                            });
+                            saveTasks();
+                            renderTasks();
+                            subtaskInput.value = '';
+                        }
+                    });
+                    
+                    addSubtaskDiv.appendChild(subtaskInput);
+                    addSubtaskDiv.appendChild(addSubtaskBtn);
+                    subtaskContainer.appendChild(addSubtaskDiv);
+                }
+                
+                // Task actions
+                const actionsElement = document.createElement('div');
+                actionsElement.className = 'task-actions';
+                
+                const editButton = document.createElement('button');
+                editButton.innerHTML = '<i class="bi bi-pencil"></i> Edit';
+                editButton.addEventListener('click', () => openEditModal(task.id));
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.innerHTML = '<i class="bi bi-trash"></i> Delete';
+                deleteButton.addEventListener('click', () => deleteTask(task.id));
+                
+                actionsElement.appendChild(editButton);
+                actionsElement.appendChild(deleteButton);
+                
+                // Assemble the task element
+                taskElement.appendChild(titleElement);
+                taskElement.appendChild(descriptionElement);
+                taskElement.appendChild(dueDateElement);
+                taskElement.appendChild(priorityElement);
+                taskElement.appendChild(tagsElement);
+                taskElement.appendChild(subtaskContainer);
+                taskElement.appendChild(actionsElement);
+                
+                return taskElement;
+            }
+            
+            // Create a tag element
+            function createTagElement(text) {
+                const tag = document.createElement('span');
+                tag.className = 'task-tag';
+                tag.textContent = text;
+                return tag;
+            }
+            
+            // Format date for display
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                return new Date(dateString).toLocaleDateString(undefined, options);
+            }
+            
+            // Make tasks draggable
+            function makeTasksDraggable() {
+                const taskElements = document.querySelectorAll('.kanban-task');
+                
+                taskElements.forEach(task => {
+                    task.addEventListener('dragstart', dragStart);
+                    task.addEventListener('dragend', dragEnd);
+                });
+                
+                const columns = document.querySelectorAll('.kanban-column');
+                
+                columns.forEach(column => {
+                    column.addEventListener('dragover', dragOver);
+                    column.addEventListener('dragenter', dragEnter);
+                    column.addEventListener('dragleave', dragLeave);
+                    column.addEventListener('drop', dragDrop);
+                });
+            }
+            
+            // Drag and drop functions
+            let draggedTask = null;
+            
+            function dragStart() {
+                draggedTask = this;
+                setTimeout(() => this.style.opacity = '0.4', 0);
+            }
+            
+            function dragEnd() {
+                this.style.opacity = '1';
+            }
+            
+            function dragOver(e) {
+                e.preventDefault();
+            }
+            
+            function dragEnter(e) {
+                e.preventDefault();
+                this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+            }
+            
+            function dragLeave() {
+                this.style.backgroundColor = '';
+            }
+            
+            function dragDrop() {
+                this.style.backgroundColor = '';
+                
+                if (draggedTask) {
+                    const taskId = draggedTask.dataset.taskId;
+                    const newStatus = this.id;
+                    
+                    // Update task status
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.status = newStatus;
+                        saveTasks();
+                        renderTasks();
+                    }
+                }
+            }
+            
+            // Add new task
+            saveTaskBtn.addEventListener('click', function() {
+                const title = taskTitleInput.value.trim();
+                const description = taskDescriptionInput.value.trim();
+                const priority = taskPrioritySelect.value;
+                const dueDate = taskDateInput.value;
+                
+                if (title && description) {
+                    const newTask = {
+                        id: generateId(),
+                        title,
+                        description,
+                        priority,
+                        dueDate,
+                        document: documentTag.checked,
+                        meeting: meetingTag.checked,
+                        presentation: presentationTag.checked,
+                        report: reportTag.checked,
+                        status: 'todo',
+                        subtasks: []
+                    };
+                    
+                    tasks.push(newTask);
+                    saveTasks();
+                    renderTasks();
+                    
+                    // Clear inputs
+                    taskTitleInput.value = '';
+                    taskDescriptionInput.value = '';
+                    taskPrioritySelect.value = 'medium';
+                    taskDateInput.value = '';
+                    documentTag.checked = false;
+                    meetingTag.checked = false;
+                    presentationTag.checked = false;
+                    reportTag.checked = false;
+                } else {
+                    alert('Please fill in both project name and task name');
+                }
+            });
+            
+            // Open edit modal
+            function openEditModal(taskId) {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    currentEditingTaskId = taskId;
+                    
+                    editTaskTitle.value = task.title;
+                    editTaskDescription.value = task.description;
+                    editTaskPriority.value = task.priority;
+                    editTaskDueDate.value = task.dueDate || '';
+                    editDocumentTag.checked = task.document || false;
+                    editMeetingTag.checked = task.meeting || false;
+                    editPresentationTag.checked = task.presentation || false;
+                    editReportTag.checked = task.report || false;
+                    
+                    // Render subtasks
+                    editSubtaskList.innerHTML = '';
+                    if (task.subtasks && task.subtasks.length > 0) {
+                        task.subtasks.forEach((subtask, index) => {
+                            const subtaskItem = document.createElement('div');
+                            subtaskItem.className = 'subtask-item';
+                            
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.className = 'subtask-checkbox';
+                            checkbox.checked = subtask.completed;
+                            checkbox.addEventListener('change', function() {
+                                task.subtasks[index].completed = this.checked;
+                            });
+                            
+                            const subtaskText = document.createElement('span');
+                            subtaskText.className = 'subtask-text' + (subtask.completed ? ' subtask-completed' : '');
+                            subtaskText.textContent = subtask.text;
+                            
+                            const deleteBtn = document.createElement('button');
+                            deleteBtn.className = 'btn btn-sm btn-link text-danger';
+                            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
+                            deleteBtn.addEventListener('click', function() {
+                                task.subtasks.splice(index, 1);
+                                openEditModal(taskId); // Refresh the list
+                            });
+                            
+                            subtaskItem.appendChild(checkbox);
+                            subtaskItem.appendChild(subtaskText);
+                            subtaskItem.appendChild(deleteBtn);
+                            editSubtaskList.appendChild(subtaskItem);
+                        });
+                    }
+                    
+                    editTaskModal.show();
+                }
+            }
+            
+            // Add subtask in edit modal
+            editAddSubtaskBtn.addEventListener('click', function() {
+                if (editNewSubtask.value.trim()) {
+                    const task = tasks.find(t => t.id === currentEditingTaskId);
+                    if (task) {
+                        if (!task.subtasks) task.subtasks = [];
+                        task.subtasks.push({
+                            text: editNewSubtask.value.trim(),
+                            completed: false
+                        });
+                        openEditModal(currentEditingTaskId); // Refresh the list
+                        editNewSubtask.value = '';
+                    }
+                }
+            });
+            
+            // Save edited task
+            saveTaskBtnModal.addEventListener('click', function() {
+                const task = tasks.find(t => t.id === currentEditingTaskId);
+                if (task) {
+                    task.title = editTaskTitle.value.trim();
+                    task.description = editTaskDescription.value.trim();
+                    task.priority = editTaskPriority.value;
+                    task.dueDate = editTaskDueDate.value || null;
+                    task.document = editDocumentTag.checked;
+                    task.meeting = editMeetingTag.checked;
+                    task.presentation = editPresentationTag.checked;
+                    task.report = editReportTag.checked;
+                    
+                    saveTasks();
+                    renderTasks();
+                    editTaskModal.hide();
+                }
+            });
+            
+            // Delete task
+            function deleteTask(taskId) {
+                if (confirm('Are you sure you want to delete this task?')) {
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    saveTasks();
+                    renderTasks();
+                }
+            }
+            
+            // Generate report
+            document.getElementById('generate-report-btn').addEventListener('click', function() {
+                alert('Report generated in console (for demo purposes)');
+                console.log('Tasks Report:', tasks);
+            });
+            
+            // Download report
+            document.getElementById('download-report-btn').addEventListener('click', function() {
+                alert('Download functionality would be implemented here');
+                // In a real implementation, this would generate a PDF or CSV
+            });
+            
+            // Send report
+            document.getElementById('send-report-btn').addEventListener('click', function() {
+                alert('Email sending functionality would be implemented here');
+                // In a real implementation, this would send an email with the report
+            });
+            
+            // Initial render
+            renderTasks();
+        });
+    </script>
+
+{% endblock %}

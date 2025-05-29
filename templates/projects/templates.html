@@ -1,0 +1,937 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Templates{% endblock %}
+
+{% block content %}
+    <style>
+        /* Color Palette */
+        :root {
+            --primary: #F26522;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary: #e4963c82;
+            --secondary-light: #F26522;
+            --secondary-dark: #F26522;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --info: #F26522;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --sidebar-bg: #ffffff84;
+            --sidebar-text: #676666;
+            --sidebar-hover: #F26522;
+            --sidebar-active: #ffffff60;
+            --sidebar-border: #e5e7eb;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+        :root {
+            --orange: #F26522;
+            --purple: rgb(75, 3, 81);
+            --light-orange: #F26522;
+            --light-purple: rgb(75, 3, 81);
+            --white: #FFFFFF;
+            --light-gray: #F5F5F5;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            color: var(--purple);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .category {
+            margin-bottom: 20px;
+        }
+        
+        .category-title {
+            color: var(--purple);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        /* New List Style for Templates */
+        .templates-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        
+        .template-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .template-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .template-icon {
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+            background-color: var(--light-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .orange-icon {
+            background-color: var(--light-orange);
+        }
+        
+        .template-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .template-title {
+            color: var(--purple);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .template-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .download-btn {
+            background-color: var(--orange);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            margin-left: 15px;
+        }
+        
+        .download-btn:hover {
+            background-color: var(--purple);
+        }
+        
+        body {
+        background-image: url("{% static 'img/2.png' %}");
+        color: var(--text-primary);
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+        .mega-container {
+            background-color: #ffffffdc;
+            margin-top: -24px;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: rgba(255, 255, 255, 0.416);
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-header h3,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .dropdown-toggle .bi-chevron-down,
+        .sidebar.collapsed .sidebar-footer span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar.collapsed .dropdown-menu {
+            position: absolute;
+            left: 70px;
+            width: 180px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.342);
+            color: white;
+            text-align: center;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 3px solid var(--secondary);
+            color: whitesmoke;
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Dropdown Styling */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            width: calc(100% - 40px);
+            border-radius: 0 0 8px 8px;
+        }
+
+        .dropdown-item {
+            padding: 8px 15px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--secondary);
+        }
+
+        /* Logout Button (Fixed at Bottom) */
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: auto;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            background-color: #575757;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .logout-btn i {
+            margin-right: 5px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            height: calc(100vh - 40px);
+            overflow-y: auto; /* Allow scrolling only in main content if needed */
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        .progress-bar {
+            color: #e74c3c;
+            background-color: #38024e;
+        }
+
+        /* Welcome Box */
+        .welcome-box {
+            background-image: linear-gradient(to right, rgb(255, 255, 255), rgb(254, 254, 254), rgb(254, 254, 254), rgba(254, 254, 254, 0.92), rgb(254, 254, 254), rgba(254, 254, 254, 0.92), rgb(254, 254, 254), rgba(254, 254, 254, 0.92), rgba(254, 254, 254, 0.692)), url('./images/freepik__upload__83338.png');
+
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            margin-bottom: 6px;
+            margin-top: 20px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            text-align: left;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .welcome-box h3 {
+            color: rgb(107, 106, 107);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .welcome-box p {
+            color: rgb(35, 1, 1);
+            margin-bottom: 20px;
+        }
+
+        /* Dashboard Boxes */
+        .dashboard-box {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+
+        .metric-box {
+            flex: 1;
+            min-width: 0;
+            height: 110px;
+            padding: 10px;
+            text-align: center;
+            background-color: rgba(82, 3, 92, 0.281);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            color: whitesmoke;
+        }
+
+        .metric-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-box:nth-child(1) {
+            border-top-color: var(--info);
+        }
+
+        .metric-box:nth-child(2) {
+            border-top-color: var(--success);
+        }
+
+        .metric-box:nth-child(3) {
+            border-top-color: var(--warning);
+        }
+
+        .metric-box div:first-child {
+            color: rgb(94, 4, 116);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: grey;
+        }
+
+        .metric-box .text-muted {
+            font-size: 0.85rem;
+        }
+
+        /* Content Boxes */
+        .content-box {
+            width: 347px;
+            height: 320px;
+            background-color: #e5e7eb17;
+            margin-top: -30px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.968), rgba(254, 254, 254, 0.92), rgb(254, 254, 254)), url('./images/freepik__upload__83338.png');
+            display: inline-block;
+            background-repeat: no-repeat;
+            background-size: cover;
+            vertical-align: top;
+            margin-left: 0px;
+            overflow-y: auto;
+            padding: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-box h5 {
+            margin-bottom: 1rem;
+            font-weight: 200;
+            color: var(--primary);
+            background-color: #87878741;
+            color: #ffffff;
+            width: 306px;
+            font-size: 16px;
+            text-align: center;
+            height: 46px;
+            padding-top: 15px;
+            border-radius: 0px;
+        }
+
+        /* Task List */
+        .task-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-left: 3px solid var(--secondary);
+            font-size: 0.9rem;
+            background-color: var(--sidebar-active);
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover {
+            background-color: var(--sidebar-hover);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .task-actions i {
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .task-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        /* Upload Box */
+        .upload-item {
+            padding: 12px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            background-color: rgba(245, 240, 238, 0.176);
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .upload-item:hover {
+            background-color: rgba(189, 187, 190, 0.176);
+        }
+
+        .upload-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .upload-actions i {
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .upload-actions i:hover {
+            transform: scale(1.1);
+        }
+
+        /* Calendar */
+        #calendar {
+            font-size: 0.9rem;
+            color: #38024e;
+        }
+
+        /* Profile Container */
+        .profile-container {
+            top: -60px;
+            left: 20px;
+            width: 180px;
+            padding: 15px;
+            background-color: #e74c3c;
+            border-radius: 8px;
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-top: -10px;
+            border: 2px solid var(--secondary);
+            object-fit: cover;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--success);
+            border: 2px solid var(--card-bg);
+        }
+
+        .profile-container p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Buttons */
+        button,
+        .btn {
+            font-size: 0.9rem !important;
+            padding: 8px 15px !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-primary {
+            background-color: rgba(128, 128, 128, 0.249);
+            border-color: var(--secondary) !important;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark) !important;
+            border-color: var(--secondary-dark) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6 !important;
+            border-color: #95a5a6 !important;
+        }
+
+        .btn-sm {
+            padding: 6px 12px !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* Task Input */
+        .task-input-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .task-input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--sidebar-border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .task-input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+            outline: none;
+        }
+
+        /* File Upload Modal */
+        .file-name-display {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            padding: 8px;
+            background-color: var(--sidebar-active);
+            border-radius: 6px;
+        }
+
+        /* Small calendar adjustments */
+        .fc .fc-toolbar-title {
+            font-size: 1.1rem;
+            color: purple;
+        }
+
+        .fc .fc-button {
+            padding: 0.3em 0.6em;
+            font-size: 0.9em;
+            background-color: #f2642250;
+            border-color: #F26522;
+        }
+
+        .fc .fc-button:hover {
+            background-color: var(--secondary-dark) !important;
+            border-color: var(--secondary-dark) !important;
+        }
+
+        /* Animation */
+        @keyframes confetti {
+            0% {
+                transform: translateY(0) rotate(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent);
+            animation: confetti 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .content-box {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .dashboard-box {
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .profile-container {
+                width: 160px;
+                right: 10px;
+            }
+        }
+
+        /* Mobile menu button */
+        .mobile-menu-btn {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1100;
+            display: none;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+
+        .welcome-container {
+            position: relative;
+        }
+
+        .welcome-box {
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .welcome-image {
+            position: absolute;
+            z-index: 10;
+            top: 15%;
+            left: 90%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .welcome-image img {
+            width: 200px;
+            height: 2000px;
+            object-fit: contain;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2));
+        }
+
+        /* Calendar styles */
+        .fc {
+            color: #333333;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .fc-toolbar-title {
+            color: #F26522;
+        }
+
+        .fc-col-header-cell-cushion {
+            color: #c57908;
+        }
+
+        .fc-daygrid-day-number {
+            color: #9b239b;
+        }
+
+        .fc-event-title {
+            color: white;
+        }
+
+        .fc-daygrid-day {
+            height: auto;
+        }
+
+        .fc-daygrid-day-top {
+            height: fit-content;
+            max-height: 8px;
+            padding: 4px;
+        }
+
+        .fc-daygrid-day-number {
+            color: #610473;
+            height: fit-content;
+            line-height: 1.2;
+            margin: 2px;
+            display: flex;
+        }
+
+        /* Scrollable content area */
+        .scrollable-content {
+            height: calc(100vh - 200px);
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+    </style>
+
+        
+            <!-- Welcome Box -->
+            <div class="welcome-box">
+                <h3>Templates!</h3>
+                <p>All available templates are listed below:</p>
+                <div class="progress mt-2" style="width: 75%; height: 10px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+                </div>
+            </div>
+
+            <div class="scrollable-content">
+                <div class="category">
+                    <h2 class="category-title">Book Templates</h2>
+                    <div class="templates-list">
+                        <div class="template-item">
+                            <div class="template-icon orange-icon">📚</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Case Study Template</h3>
+                                <p class="template-desc">Structured format for presenting detailed case studies with analysis sections.</p>
+                            </div>
+                            <button class="download-btn" data-template="case-study">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon">📝</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Teaching Notes</h3>
+                                <p class="template-desc">Organized template for creating comprehensive teaching materials and lesson plans.</p>
+                            </div>
+                            <button class="download-btn" data-template="teaching-notes">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon orange-icon">🧠</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Theoretical Chapter</h3>
+                                <p class="template-desc">Framework for writing theoretical chapters with proper citations and references.</p>
+                            </div>
+                            <button class="download-btn" data-template="theoretical-chapter">Download</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <h2 class="category-title">Research Papers</h2>
+                    <div class="templates-list">
+                        <div class="template-item">
+                            <div class="template-icon">✏️</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Editor Guide</h3>
+                                <p class="template-desc">Comprehensive guide for editors with style guidelines and review checklists.</p>
+                            </div>
+                            <button class="download-btn" data-template="editor-guide">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon orange-icon">💡</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Conceptual Paper</h3>
+                                <p class="template-desc">Structure for writing conceptual research papers with theoretical frameworks.</p>
+                            </div>
+                            <button class="download-btn" data-template="conceptual-paper">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon">📊</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Grounded Methodology</h3>
+                                <p class="template-desc">Template for grounded theory research with data collection and analysis sections.</p>
+                            </div>
+                            <button class="download-btn" data-template="grounded-methodology">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon orange-icon">🏛️</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Theoretical Framework</h3>
+                                <p class="template-desc">Structure for developing and presenting theoretical frameworks in research.</p>
+                            </div>
+                            <button class="download-btn" data-template="theoretical-framework">Download</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="category">
+                    <h2 class="category-title">Software Development</h2>
+                    <div class="templates-list">
+                        <div class="template-item">
+                            <div class="template-icon orange-icon">⚙️</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Functional Requirements</h3>
+                                <p class="template-desc">Template for documenting functional requirements with use cases and scenarios.</p>
+                            </div>
+                            <button class="download-btn" data-template="functional-requirements">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon">🔧</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Technical Requirements</h3>
+                                <p class="template-desc">Structure for technical specifications including system architecture and APIs.</p>
+                            </div>
+                            <button class="download-btn" data-template="technical-requirements">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon orange-icon">🎨</div>
+                            <div class="template-content">
+                                <h3 class="template-title">Design Document</h3>
+                                <p class="template-desc">Comprehensive template for software design documentation and diagrams.</p>
+                            </div>
+                            <button class="download-btn" data-template="design-document">Download</button>
+                        </div>
+                        
+                        <div class="template-item">
+                            <div class="template-icon">✅</div>
+                            <div class="template-content">
+                                <h3 class="template-title">UAT Guide</h3>
+                                <p class="template-desc">User Acceptance Testing guide with test cases and approval workflow.</p>
+                            </div>
+                            <button class="download-btn" data-template="uat-guide">Download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+           
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const downloadButtons = document.querySelectorAll('.download-btn');
+                    
+                    downloadButtons.forEach(button => {
+                        button.addEventListener('click', function() {
+                            const templateName = this.getAttribute('data-template');
+                            alert(`Downloading ${templateName.replace('-', ' ')} template...`);
+                        });
+                    });
+                });
+            </script>
+        </div>
+    </div>
+{% endblock %}

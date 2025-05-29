@@ -1,0 +1,1079 @@
+{% load static %}
+{% load form_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        /* Shared CSS with Supervisor Dashboard */
+        :root {
+            --primary: #F26522;
+            --primary-light: #34495e;
+            --primary-dark: #1a252f;
+            --secondary: #e4963c82;
+            --secondary-light: #F26522;
+            --secondary-dark: #F26522;
+            --accent: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --info: #F26522;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --sidebar-bg: #ffffff84;
+            --sidebar-text: #676666;
+            --sidebar-hover: #F26522;
+            --sidebar-active: #ffffff60;
+            --sidebar-border: #e5e7eb;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+        }
+
+        body {
+            background-image: url(./images/2.png);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .mega-container {
+            background-color: #ffffffdc;
+            margin-top: -24px;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: rgba(255, 255, 255, 0.416);
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border-right: 1px solid var(--sidebar-border);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-header h3,
+        .sidebar.collapsed .nav-link span,
+        .sidebar.collapsed .dropdown-toggle .bi-chevron-down,
+        .sidebar.collapsed .sidebar-footer span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 15px 5px;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.342);
+            color: white;
+            text-align: center;
+            height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--sidebar-hover);
+            border-left: 3px solid var(--secondary);
+            color: whitesmoke;
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Student-specific styles */
+        .notification-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.6rem;
+        }
+
+        .submission-card {
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s;
+        }
+
+        .submission-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-tracker {
+            height: 10px;
+            border-radius: 5px;
+        }
+
+        .chat-message {
+            max-width: 70%;
+            border-radius: 10px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+        }
+
+        .student-message {
+            background-color: var(--light);
+            margin-left: auto;
+        }
+
+        .supervisor-message {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: var(--primary);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            border: 2px solid white;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mega-container">
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <i class="bi bi-list"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">>
+                <img src="{% static 'img/logo_uj-removebg-preview.png' %}" alt="" width="150px" height="70px">
+                <button class="toggle-btn" id="toggleBtn">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="nav-link active"><i class="bi bi-house"></i><span>Dashboard</span></a></li>
+                <li><a href="#profile-section" class="nav-link"><i class="bi bi-person"></i> <span>My Profile</span></a></li>
+                <li><a href="#submissions-section" class="nav-link"><i class="bi bi-upload"></i> <span>Submissions</span></a></li>
+                <li><a href="#feedback-section" class="nav-link"><i class="bi bi-chat-square-text"></i> <span>Feedback</span></a></li>
+                <li><a href="#notifications-section" class="nav-link"><i class="bi bi-bell"></i> <span>Notifications</span>
+                        <span class="notification-badge badge bg-danger rounded-pill" id="notificationCount">3</span>
+                    </a></li>
+                <li><a href="#meetings-section" class="nav-link"><i class="bi bi-calendar-check"></i> <span>Meetings</span></a></li>
+                <li><a href="#chat-section" class="nav-link"><i class="bi bi-chat-dots"></i> <span>Chat</span></a></li>
+            </ul>
+            <div class="sidebar-footer">
+                <a href="#" class="logout-btn"><i class="bi bi-box-arrow-left"></i> <span>Logout</span></a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Welcome Box -->
+            <div class="welcome-box mb-4">
+                <h3>Welcome, <span id="studentName">{{student.name}}</span></h3>
+                <p class="text-muted">Track your research progress and communicate with your supervisor</p>
+                <div class="d-flex align-items-center">
+                    <div class="progress mt-2" style="width: 75%; height: 10px;">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" style="width: {{ student.progress }}%">
+                                {{ student.progress }}%
+                        </div>
+
+                    </div>
+                    <small class="ms-2 fw-bold">65% Complete</small>
+                </div>
+            </div>
+
+<!-- Profile Section -->
+<section id="profile-section" class="mb-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white">
+      <h5 class="mb-0"><i class="bi bi-person me-2"></i>My Profile</h5>
+    </div>
+    <div class="card-body">
+      <form method="POST" id="studentProfileForm">
+        {% csrf_token %}
+        
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="fullName" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="fullName" name="name" value="{{ student.name }}">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="studentId" class="form-label">Student ID</label>
+            <input type="text" class="form-control" id="studentId" name="username" value="{{ user.username }}">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.program.id_for_label }}" class="form-label">Program</label>
+           <select class="form-select" id="program" name="program" required>
+                <option value="">Select program</option>
+                <option value="PhD" {% if student.program == "PhD" %}selected{% endif %}>PhD</option>
+                <option value="Masters" {% if student.program == "Masters" %}selected{% endif %}>Masters</option>
+                <option value="MBA" {% if student.program == "MBA" %}selected{% endif %}>MBA</option>
+            </select>
+
+          </div>
+          <div class="col-md-6 mb-3">
+            <label for="{{ form.year.id_for_label }}" class="form-label">Year of Study</label>
+            {{ form.year|add_class:"form-control" }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="supervisor" class="form-label">Supervisor</label>
+          <input type="text" class="form-control" id="supervisor" name="supervisor" value="{{ student.supervisor }}" readonly>
+        </div>
+
+        <div class="mb-3">
+          <label for="{{ form.co_supervisor.id_for_label }}" class="form-label">Co-Supervisor</label>
+          {{ form.co_supervisor|add_class:"form-control" }}
+        </div>
+
+        <div class="mb-3">
+          <label for="{{ form.research_title.id_for_label }}" class="form-label">Research Title</label>
+          {{ form.research_title|add_class:"form-control" }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+
+<!-- Submissions Section -->
+<section id="submissions-section" class="mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-upload me-2"></i>My Submissions</h5>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                <i class="bi bi-plus"></i> New Submission
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Document Type</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Feedback</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in submissions %}
+                            <tr>
+                                <td>{{ sub.created_at|date:"Y-m-d" }}</td>
+                                <td>{{ sub.document_type }}</td>
+                                <td>{{ sub.title }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if sub.status == 'Approved' %}bg-success
+                                        {% elif sub.status == 'Pending Review' %}bg-warning
+                                        {% elif sub.status == 'Feedback Provided' %}bg-info
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ sub.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if sub.status == "Feedback Provided" %}
+                                        <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                        <i class="bi bi-clock text-muted"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ sub.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No submissions yet</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Feedback Section -->
+<section id="feedback-section" class="mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-chat-square-text me-2"></i>Feedback Received
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="timeline">
+                {% for sub in feedback_submissions %}
+                    <div class="timeline-item">
+                        <div class="card mb-4 border-info">
+                            <div class="card-header bg-light d-flex justify-content-between">
+                                <div>
+                                    <i class="bi bi-chat-left-quote text-info me-2"></i>
+                                    <strong>{{ sub.title }}</strong>
+                                    <span class="badge bg-secondary ms-2">v{{ sub.version_number }}</span>
+                                </div>
+                                <small class="text-muted">{{ sub.created_at|date:"M d, Y H:i" }}</small>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ sub.feedback_text|default:"No feedback message provided." }}</p>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted">From: Supervisor</small>
+                                    {% if sub.feedback_file %}
+                                        <a href="{{ sub.feedback_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download"></i> Download Feedback
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Replies Section -->
+                                <div class="mt-3 ps-3 border-start">
+                                    <strong class="text-muted">Replies:</strong>
+                                    {% for reply in sub.replies.all %}
+                                        <div class="border-start ps-3 mb-2">
+                                            <p class="mb-1">{{ reply.message }}</p>
+                                            <small class="text-muted">You – {{ reply.created_at|date:"M d, Y H:i" }}</small>
+                                        </div>
+                                    {% empty %}
+                                        <p class="text-muted">No replies yet.</p>
+                                    {% endfor %}
+
+                                    <!-- Reply Form -->
+                                    <form method="POST" action="{% url 'submit_feedback_reply' sub.id %}">
+                                        {% csrf_token %}
+                                        {{ feedback_reply_form.message|add_class:"form-control" }}
+                                        <button type="submit" class="btn btn-sm btn-primary mt-2">Reply</button>
+                                    </form>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p class="text-muted">No feedback has been provided yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Notifications Section -->
+<section id="notifications-section" class="mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="bi bi-bell me-2"></i>Notifications
+                {% if unread_notification_count > 0 %}
+                <span class="badge bg-danger rounded-pill ms-2">{{ unread_notification_count }}</span>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                {% for notif in notifications %}
+                <a href="{% url 'mark_notification_read' notif.id %}"
+                    class="list-group-item list-group-item-action {% if not notif.is_read %}active{% endif %}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ notif.title }}</h6>
+                        <small>{{ notif.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ notif.message }}</p>
+                </a>
+                {% empty %}
+                <div class="text-muted text-center">No notifications yet.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+
+           <!-- Meetings Section -->
+<section id="meetings-section" class="mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Meeting Schedule</h5>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#meetingModal">
+                <i class="bi bi-plus"></i> Request Meeting
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Purpose</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for meeting in meetings %}
+                            <tr>
+                                <td>{{ meeting.date }}</td>
+                                <td>{{ meeting.time }}</td>
+                                <td>{{ meeting.purpose }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if meeting.status == 'Confirmed' %}bg-success
+                                        {% elif meeting.status == 'Pending' %}bg-warning
+                                        {% elif meeting.status == 'Completed' %}bg-info
+                                        {% elif meeting.status == 'Cancelled' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ meeting.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No meetings scheduled</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Meeting Modal -->
+<div class="modal fade" id="meetingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'submit_meeting' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Request Meeting</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+               <div class="modal-body">
+    <div class="mb-3">
+        <label for="{{ meeting_form.date.id_for_label }}" class="form-label">Date</label>
+        {{ meeting_form.date|add_class:"form-control" }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ meeting_form.time.id_for_label }}" class="form-label">Time</label>
+        {{ meeting_form.time|add_class:"form-control" }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ meeting_form.duration.id_for_label }}" class="form-label">Duration (minutes)</label>
+        {{ meeting_form.duration|add_class:"form-control" }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ meeting_form.purpose.id_for_label }}" class="form-label">Purpose</label>
+        {{ meeting_form.purpose|add_class:"form-control" }}
+    </div>
+    <div class="mb-3">
+        <label for="{{ meeting_form.mode.id_for_label }}" class="form-label">Mode</label>
+        {{ meeting_form.mode|add_class:"form-select" }}
+    </div>
+</div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Section -->
+<section id="chat-section" class="mb-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-chat-dots me-2"></i>Chat with Supervisor</h5>
+        </div>
+        <div class="card-body">
+            <div class="chat-container" style="height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                {% for chat in chat_messages %}
+                    <div class="chat-message {% if chat.sender == user %}student-message{% else %}supervisor-message{% endif %}">
+                        <p>{{ chat.message }}</p>
+                        <small class="text-muted d-block text-end">
+                            {% if chat.sender == user %}You{% else %}Supervisor{% endif %} – {{ chat.timestamp|date:"H:i" }}
+                        </small>
+                    </div>
+                {% endfor %}
+            </div>
+            <form method="POST" action="{% url 'send_chat' %}">
+                {% csrf_token %}
+                <div class="input-group">
+                    {{ chat_form.message|add_class:"form-control" }}
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+        </div>
+    </div>
+
+ <!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{% url 'submit_document' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">New Submission</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_document_type" class="form-label">Document Type</label>
+                        {{ submission_form.document_type|add_class:"form-select" }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_title" class="form-label">Title</label>
+                        {{ submission_form.title|add_class:"form-control" }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_file" class="form-label">File Upload</label>
+                        {{ submission_form.file|add_class:"form-control" }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label">Notes (Optional)</label>
+                        {{ submission_form.notes|add_class:"form-control" }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Meeting Modal -->
+    <div class="modal fade" id="meetingModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Request Meeting</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="meetingRequestForm">
+                        <div class="mb-3">
+                            <label for="meetingDate" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="meetingDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="meetingTime" class="form-label">Time</label>
+                            <input type="time" class="form-control" id="meetingTime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="meetingDuration" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="meetingDuration" min="15" max="120" value="30" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="meetingPurpose" class="form-label">Purpose</label>
+                            <textarea class="form-control" id="meetingPurpose" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="meetingMode" class="form-label">Mode</label>
+                            <select class="form-select" id="meetingMode" required>
+                                <option value="In-person">In-person</option>
+                                <option value="Virtual">Virtual</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitMeetingBtn">Request Meeting</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Student Dashboard JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize data
+    
+            loadSubmissions();
+            loadMeetings();
+            loadNotifications();
+            
+            // Event listeners
+
+            document.getElementById('submitDocumentBtn').addEventListener('click', submitDocument);
+            document.getElementById('submitMeetingBtn').addEventListener('click', requestMeeting);
+            document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+            
+            // Sidebar toggle functionality
+            document.getElementById('toggleBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
+        });
+
+        // Sample data structure (in a real app, this would come from a backend API)
+
+
+        let submissions = [
+            {
+                id: 'SUB001',
+                date: '2023-05-10',
+                type: 'Chapter',
+                title: 'Chapter 1 - Introduction',
+                file: 'chapter1.pdf',
+                status: 'Feedback Provided',
+                feedback: true,
+                notes: 'Initial draft of introduction chapter'
+            },
+            {
+                id: 'SUB002',
+                date: '2023-04-15',
+                type: 'Proposal',
+                title: 'Research Proposal',
+                file: 'proposal.pdf',
+                status: 'Approved',
+                feedback: true,
+                notes: 'Final research proposal submission'
+            }
+        ];
+
+        let meetings = [
+            {
+                id: 'MTG001',
+                date: '2023-06-15',
+                time: '14:00',
+                duration: 30,
+                purpose: 'Discuss Chapter 1 feedback',
+                mode: 'Virtual',
+                status: 'Confirmed'
+            },
+            {
+                id: 'MTG002',
+                date: '2023-05-20',
+                time: '10:30',
+                duration: 45,
+                purpose: 'Research methodology discussion',
+                mode: 'In-person',
+                status: 'Completed'
+            }
+        ];
+
+        let notifications = [
+            {
+                id: 'NOT001',
+                title: 'New Feedback Received',
+                message: 'Dr. Smith has provided feedback on your Chapter 1 submission.',
+                date: '2023-05-12 10:30',
+                read: false
+            },
+            {
+                id: 'NOT002',
+                title: 'Meeting Confirmed',
+                message: 'Your meeting on June 15 at 2:00 PM has been confirmed.',
+                date: '2023-05-10 15:45',
+                read: false
+            }
+        ];
+
+
+
+        // Load submissions
+        function loadSubmissions() {
+            const tableBody = document.getElementById('submissionsTable');
+            tableBody.innerHTML = '';
+            
+            if (submissions.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No submissions yet</td></tr>';
+                return;
+            }
+            
+            submissions.forEach(sub => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${sub.date}</td>
+                    <td>${sub.type}</td>
+                    <td>${sub.title}</td>
+                    <td><span class="badge ${getStatusBadgeClass(sub.status)}">${sub.status}</span></td>
+                    <td>${sub.feedback ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-clock text-warning"></i>'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewSubmission('${sub.id}')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        ${sub.feedback ? `<button class="btn btn-sm btn-outline-success ms-1" onclick="viewFeedback('${sub.id}')">
+                            <i class="bi bi-chat-square-text"></i>
+                        </button>` : ''}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function getStatusBadgeClass(status) {
+            switch(status) {
+                case 'Approved': return 'bg-success';
+                case 'Feedback Provided': return 'bg-info';
+                case 'Pending Review': return 'bg-warning';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Submit document
+        function submitDocument() {
+            const documentType = document.getElementById('documentType').value;
+            const documentTitle = document.getElementById('documentTitle').value;
+            const documentFile = document.getElementById('documentFile').files[0];
+            const documentNotes = document.getElementById('documentNotes').value;
+            
+            if (!documentType || !documentTitle || !documentFile) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            // In a real app, you would upload the file to the server
+            // For this demo, we'll just add it to our submissions array
+            
+            const newSubmission = {
+                id: 'SUB' + (submissions.length + 1).toString().padStart(3, '0'),
+                date: new Date().toISOString().split('T')[0],
+                type: documentType,
+                title: documentTitle,
+                file: documentFile.name,
+                status: 'Pending Review',
+                feedback: false,
+                notes: documentNotes
+            };
+            
+            submissions.unshift(newSubmission);
+            
+            // Close modal and refresh submissions
+            bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+            loadSubmissions();
+            
+            // Show success message
+            alert('Document submitted successfully!');
+        }
+
+        // Load meetings
+        function loadMeetings() {
+            const tableBody = document.getElementById('meetingsTable');
+            tableBody.innerHTML = '';
+            
+            if (meetings.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No meetings scheduled</td></tr>';
+                return;
+            }
+            
+            meetings.forEach(meeting => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${meeting.date}</td>
+                    <td>${meeting.time}</td>
+                    <td>${meeting.purpose}</td>
+                    <td><span class="badge ${getMeetingStatusBadgeClass(meeting.status)}">${meeting.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewMeeting('${meeting.id}')">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        ${meeting.status === 'Pending' ? `<button class="btn btn-sm btn-outline-danger ms-1" onclick="cancelMeeting('${meeting.id}')">
+                            <i class="bi bi-x-circle"></i>
+                        </button>` : ''}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function getMeetingStatusBadgeClass(status) {
+            switch(status) {
+                case 'Confirmed': return 'bg-success';
+                case 'Pending': return 'bg-warning';
+                case 'Completed': return 'bg-info';
+                case 'Cancelled': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        // Request meeting
+        function requestMeeting() {
+            const meetingDate = document.getElementById('meetingDate').value;
+            const meetingTime = document.getElementById('meetingTime').value;
+            const meetingDuration = document.getElementById('meetingDuration').value;
+            const meetingPurpose = document.getElementById('meetingPurpose').value;
+            const meetingMode = document.getElementById('meetingMode').value;
+            
+            if (!meetingDate || !meetingTime || !meetingDuration || !meetingPurpose) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            // In a real app, you would send this to the server
+            // For this demo, we'll just add it to our meetings array
+            
+            const newMeeting = {
+                id: 'MTG' + (meetings.length + 1).toString().padStart(3, '0'),
+                date: meetingDate,
+                time: meetingTime,
+                duration: meetingDuration,
+                purpose: meetingPurpose,
+                mode: meetingMode,
+                status: 'Pending'
+            };
+            
+            meetings.unshift(newMeeting);
+            
+            // Close modal and refresh meetings
+            bootstrap.Modal.getInstance(document.getElementById('meetingModal')).hide();
+            loadMeetings();
+            
+            // Show success message
+            alert('Meeting request sent successfully!');
+        }
+
+        // Load notifications
+        function loadNotifications() {
+            const notificationContainer = document.querySelector('#notifications-section .list-group');
+            notificationContainer.innerHTML = '';
+            
+            if (notifications.length === 0) {
+                notificationContainer.innerHTML = '<div class="text-center text-muted py-3">No notifications</div>';
+                return;
+            }
+            
+            // Update notification count
+            const unreadCount = notifications.filter(n => !n.read).length;
+            document.getElementById('notificationCount').textContent = unreadCount;
+            
+            notifications.forEach(notification => {
+                const notificationItem = document.createElement('a');
+                notificationItem.href = '#';
+                notificationItem.className = `list-group-item list-group-item-action ${notification.read ? '' : 'active'}`;
+                notificationItem.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">${notification.title}</h6>
+                        <small class="text-muted">${formatNotificationDate(notification.date)}</small>
+                    </div>
+                    <p class="mb-1">${notification.message}</p>
+                `;
+                notificationItem.addEventListener('click', () => markAsRead(notification.id));
+                notificationContainer.appendChild(notificationItem);
+            });
+        }
+
+        function formatNotificationDate(dateString) {
+            // Simple date formatting - in a real app you might use a library like moment.js
+            return dateString.split(' ')[0];
+        }
+
+        function markAsRead(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification) {
+                notification.read = true;
+                loadNotifications();
+            }
+        }
+
+        // Chat functionality
+        function sendMessage() {
+            const messageInput = document.getElementById('chatInput');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                const chatContainer = document.getElementById('chatMessages');
+                
+                // Add message to chat
+                const messageElement = document.createElement('div');
+                messageElement.className = 'chat-message student-message';
+                messageElement.innerHTML = `
+                    <p>${message}</p>
+                    <small class="text-muted d-block text-end">You - ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>
+                `;
+                chatContainer.appendChild(messageElement);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Scroll to bottom
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // In a real app, you would send this message to the server
+                // and then receive it back to display in the chat
+            }
+        }
+
+        // View functions (would be implemented fully in a real app)
+        function viewSubmission(id) {
+            alert(`View submission ${id}`);
+        }
+
+        function viewFeedback(id) {
+            alert(`View feedback for submission ${id}`);
+        }
+
+        function viewMeeting(id) {
+            alert(`View meeting ${id}`);
+        }
+
+        function cancelMeeting(id) {
+            if (confirm('Are you sure you want to cancel this meeting?')) {
+                const meeting = meetings.find(m => m.id === id);
+                if (meeting) {
+                    meeting.status = 'Cancelled';
+                    loadMeetings();
+                }
+            }
+        }
+
+        // Sidebar functions
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Change icon
+            const toggleBtn = document.getElementById('toggleBtn');
+            if (sidebar.classList.contains('collapsed')) {
+                toggleBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+            } else {
+                toggleBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+    </script>
+</body>
+</html>

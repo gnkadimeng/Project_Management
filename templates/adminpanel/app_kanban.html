@@ -1,0 +1,141 @@
+{% extends 'adminpanel/index.html' %}
+{% load static %}
+
+{% block title %}Kanban Board{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/kanban.css' %}">
+
+<style>
+/* Only for this page: Kanban Board */
+
+body {
+    background-image: url("{% static 'img/2.png' %}");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+}
+
+/* Welcome Box Image */
+.welimage img {
+    width: 200px;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Card body background */
+.card-body {
+    background-image: linear-gradient(to right, rgba(255, 255, 255, 0.968), rgba(118, 89, 117, 0.815), rgba(153, 149, 154, 1), rgba(115, 112, 115, 0.858), rgba(71, 0, 89, 1)), url("{% static 'img/freepik__upload__83338.png' %}");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+</style>
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Kanban Board</h2>
+
+    <div class="welimage">
+        <img src="{% static 'img/Team work-cuate.png' %}" alt="Team Work">
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" id="taskTitle" class="form-control" placeholder="Project Name">
+                </div>
+                <div class="col-md-3">
+                    <textarea id="task-description" class="form-control" placeholder="Task Name" rows="1"></textarea>
+                </div>
+                <div class="col-md-2">
+                    <select id="taskPriority" class="form-select">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" id="taskDate" class="form-control">
+                </div>
+
+                <div class="col-md-12 mt-3">
+                    <div class="d-flex flex-wrap gap-3">
+                        {% for phase in phases %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="{{ phase|slugify }}Tag">
+                            <label class="form-check-label" for="{{ phase|slugify }}Tag">{{ phase }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="col-12 text-center mt-4">
+                    <button class="btn btn-primary px-5" id="saveTask">Add Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Columns -->
+    <div class="kanban-container d-flex gap-4">
+        <div class="kanban-column" id="todo">
+            <h4>To Do</h4>
+        </div>
+        <div class="kanban-column" id="in-progress">
+            <h4>In Progress</h4>
+        </div>
+        <div class="kanban-column" id="review">
+            <h4>Review</h4>
+        </div>
+        <div class="kanban-column" id="testing">
+            <h4>Complete</h4>
+        </div>
+    </div>
+
+    <div class="mb-4 d-flex justify-content-center">
+        <button id="generate-report-btn" class="btn btn-primary me-2">Generate Report</button>
+        <button id="download-report-btn" class="btn btn-primary me-2">Download Report</button>
+        <button id="send-report-btn" class="btn btn-primary">Send Report</button>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="edit-task-title" class="form-control mb-2" placeholder="Project Name">
+                <textarea id="edit-task-description" class="form-control mb-2" placeholder="Task Name"></textarea>
+                <select id="edit-task-priority" class="form-select mb-2">
+                    <option value="low">Low Priority</option>
+                    <option value="medium">Medium Priority</option>
+                    <option value="high">High Priority</option>
+                </select>
+                <input type="date" id="edit-task-due-date" class="form-control mb-2">
+                <div class="d-flex flex-wrap gap-3 mt-3">
+                    {% for phase in phases %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="edit-{{ phase|slugify }}Tag">
+                        <label class="form-check-label" for="edit-{{ phase|slugify }}Tag">{{ phase }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" id="save-task-btn" class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/app.js' %}"></script>
+{% endblock %}
