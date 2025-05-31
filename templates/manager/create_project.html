@@ -1,0 +1,22 @@
+{% extends 'manager/home.html' %}
+{% load static %}
+
+{% block title %}Create Project{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="bi bi-plus-circle me-2"></i>Create New Project</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Create Project</button>
+                <a href="{% url 'manager_dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

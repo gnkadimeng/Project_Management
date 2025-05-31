@@ -1,4 +1,6 @@
 {% load static %}
+{% load widget_tweaks %}
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,6 +18,7 @@
           --background-welcome: url("{% static 'img/freepik__upload__83338.png' %}");
           --background-content: url("{% static 'img/freepik__upload__83338.png' %}");
       }
+
     </style>
 
     
@@ -45,20 +48,7 @@
                 <li><a href="{% url 'admin_ganttchart' %}" class="nav-link"><i class="bi bi-graph-up"></i><span>Project Analytics</span></a></li>
                 <li><a href="{% url 'overview' %}" class="nav-link"><i class="bi bi-graph-up-arrow"></i><span>Project Overview</span></a></li>
                 <li><a href="{% url 'finance' %}" class="nav-link"><i class="bi bi-wallet"></i><span>Finance</span></a></li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="{% url 'supervisor_dashboard' %}" id="supervisionDropdown"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-collection-play"></i><span class="ms-2">Supervision</span>
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="supervisionDropdown">
-                        <li><a class="dropdown-item" href="#students-section">My Students</a></li>
-                        <li><a class="dropdown-item" href="#submissions-section">Submissions</a></li>
-                        <li><a class="dropdown-item" href="#feedback-section">Feedback</a></li>
-                        <li><a class="dropdown-item" href="#meetings-section">Meetings</a></li>
-                        <li><a class="dropdown-item" href="#chat-section">Chat</a></li>
-                        <li><a class="dropdown-item" href="#reports-section">Reports</a></li>
-                    </ul>
-                </li>
+                <li><a href="{% url 'supervisor_dashboard' %}" class="nav-link"><i class="bi bi-collection-play"></i><span>Supervision</span></a></li>
                 </ul>
 
             <div class="sidebar-footer">
@@ -79,6 +69,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="{% static 'admin/dashboard.js' %}"></script>
+
 </body>
 
 </html>

@@ -61,9 +61,25 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="internalPapersBody">
-                                    <!-- Papers will be added here dynamically -->
+                               <tbody id="internalPapersBody">
+                                {% for paper in internal_papers %}
+                                    <tr>
+                                    <td>{{ paper.title }}</td>
+                                    <td>{{ paper.lead_author }}{% if paper.co_authors %}, {{ paper.co_authors }}{% endif %}</td>
+                                    <td>{{ paper.status|capfirst }}</td>
+                                    <td>{{ paper.version }}</td>
+                                    <td>{{ paper.updated_at|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <a href="{{ paper.manuscript.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="6" class="text-center">No internal papers found.</td></tr>
+                                {% endfor %}
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
@@ -87,9 +103,26 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody id="externalPapersBody">
-                                    <!-- Papers will be added here dynamically -->
-                                </tbody>
+                               <tbody id="externalPapersBody">
+                                    {% for paper in external_papers %}
+                                        <tr>
+                                        <td>{{ paper.title }}</td>
+                                        <td>{{ paper.lead_author }}{% if paper.co_authors %}, {{ paper.co_authors }}{% endif %}</td>
+                                        <td>{{ paper.target_journal }}</td>
+                                        <td>{{ paper.status|capfirst }}</td>
+                                        <td>{{ paper.submission_date }}</td>
+                                        <td>{{ paper.updated_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            <a href="{{ paper.manuscript.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="7" class="text-center">No external papers found.</td></tr>
+                                    {% endfor %}
+                                    </tbody>
+
                             </table>
                         </div>
                     </div>

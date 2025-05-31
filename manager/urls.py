@@ -10,4 +10,7 @@ urlpatterns = [
     path('manager_elearning/', views.manager_elearning, name='manager_elearning'),
     path('manager_templates/', views.manager_templates, name='manager_templates'),
     path('manager_kanban/', views.manager_kanban, name='manager_kanban'),
+    path('add-paper/', views.add_paper_project, name='add_paper_project'),
+    path('papers/', views.paper_tracking, name='paper_tracking'),
+    path('assign/', views.assign, name='assign'),
 ]

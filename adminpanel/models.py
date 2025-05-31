@@ -1,6 +1,9 @@
 from django.conf import settings
 from django.db import models
 from django.apps import apps
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 class CostCentre(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -56,10 +59,11 @@ class Project(models.Model):
 
     def __str__(self):
         return self.name
+        
 
 
 class SupervisorProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'role': 'staff'})
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'role': 'admin'})
     department = models.CharField(max_length=100, blank=True, null=True)
     office_location = models.CharField(max_length=255, blank=True, null=True)
     title = models.CharField(max_length=50, default='Dr.')
@@ -89,4 +93,9 @@ class SupervisorFeedback(models.Model):
         if self.status not in valid_statuses:
             raise ValidationError(f"Invalid status: {self.status}. Must be one of: {valid_statuses}")
 
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_supervisor_profile(sender, instance, created, **kwargs):
+    if created and instance.role in ['admin']:
+        SupervisorProfile.objects.get_or_create(user=instance)
 

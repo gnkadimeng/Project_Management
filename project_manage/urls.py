@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from adminpanel.views import admin_dashboard
+from adminpanel.views import overview
 from users.views import login_view
 from projects.views import dashboard
 from manager.views import manager_dashboard
@@ -26,12 +26,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', login_view, name='login'), 
     path("dashboard/", dashboard, name='dashboard'),  # Dashboard Home
-    path("reports/", include("reports.urls")),  # Reports URLs
     path("users/", include("users.urls")),      # User-related URLs
-    path("tasks/", include("tasks.urls")),      # Tasks-related URLs
     path("projects/", include("projects.urls")),  # Projects-related URLs
     path("adminpanel/", include("adminpanel.urls")),  # Admin-related URLs
-    path('admin_dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('overview/', overview, name='overview'),
     path('manager_dashboard/', manager_dashboard, name='manager_dashboard'),
     path('manager/', include('manager.urls')),  # Manager-related URLs
 ]

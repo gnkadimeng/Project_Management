@@ -1,0 +1,105 @@
+{% load static %}
+
+{% block title %}Assign Projects{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/assign.css' %}">
+
+<div class="dashboard-container">
+    <div class="header mb-4">
+        <a href="{% url 'manager_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <h3 class="mt-3">Project Manager Dashboard</h3>
+        <p class="text-muted">Manage projects and team assignments</p>
+    </div>
+
+    <div class="row">
+        <!-- Left Column: Projects List -->
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-folder2-open me-2"></i>Projects</span>
+                    <a href="{% url 'create_project' %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i> New Project
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% for project in projects %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5>{{ project.name }}</h5>
+                                <p class="mb-1 text-muted">{{ project.description }}</p>
+                                <span class="badge bg-secondary">{{ project.get_project_type_display }}</span>
+                                <span class="badge bg-success">{{ project.status }}</span>
+                            </div>
+                            <div>
+                                <a href="{% url 'project_detail' project.id %}" class="btn btn-sm btn-outline-dark">View</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p>No projects available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Assignments -->
+        <div class="col-lg-7">
+            {% if project %}
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-people me-2"></i>Assign Team Members for "{{ project.name }}"
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'project_detail' project.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="team_member" class="form-label">Team Member</label>
+                            <select name="team_member" class="form-select" required>
+                                {% for user in eligible_users %}
+                                    <option value="{{ user.id }}">{{ user.username }} - {{ user.get_full_name|default:user.email }} ({{ user.get_role_display }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="responsibility" class="form-label">Responsibility</label>
+                            <textarea name="responsibility" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Assign Member</button>
+                    </form>
+
+                    <hr>
+
+                    <h6>Current Assignments:</h6>
+                    <ul class="list-group">
+                        {% for assignment in assignments %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ assignment.team_member.full_name }}</strong><br>
+                                <small>{{ assignment.responsibility }}</small>
+                            </div>
+                            <form method="POST" action="{% url 'remove_assignment' assignment.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                            </form>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item">No members assigned yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body">
+                    <p class="text-muted">Select a project to view or assign team members.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

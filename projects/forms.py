@@ -1,6 +1,6 @@
 # projects/forms.py
 from django import forms
-from .models import DailyTask, StudentProfile, Submission, FeedbackReply, Meeting, ChatMessage
+from .models import DailyTask, StudentProfile, Submission, FeedbackReply, Meeting, ChatMessage, Project, Assignment, TeamMember
 
 class DailyTaskForm(forms.ModelForm):
     class Meta:
@@ -63,5 +63,26 @@ class ChatForm(forms.ModelForm):
             'message': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Type your message...'})
         }
 
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ['name', 'description', 'project_type']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 3}),
+        }
+
+class AssignmentForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ['team_member', 'responsibility']
+        widgets = {
+            'responsibility': forms.Textarea(attrs={'rows': 3}),
+        }
+   
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['team_member'].queryset = TeamMember.objects.all()
+        self.fields['team_member'].label_from_instance = lambda obj: obj.full_name
 
 

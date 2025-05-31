@@ -2,24 +2,58 @@ from django.db import models
 from django.conf import settings
 from adminpanel.models import SupervisorProfile
 
-# Create your models here.
 class Project(models.Model):
-    PROJECT_TYPE_CHOICES = [
+    PROJECT_TYPES = (
+        ('software', 'Software Project'),
+        ('book', 'Book Project'),
         ('paper', 'Paper'),
-        ('book', 'Book'),
-        ('software', 'Software'),
-     
-    ]
+    )
+   
+    STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+    )
+   
     name = models.CharField(max_length=255)
-    type = models.CharField(max_length=50, choices=PROJECT_TYPE_CHOICES)
-    description = models.TextField(blank=True, null=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='created_projects')
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)
-    status = models.CharField(max_length=50, default='active')
-
+    description = models.TextField(max_length=255, blank=True, null=True)
+    project_type = models.CharField(max_length=20, choices=PROJECT_TYPES, default='software')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_projects')
+    created_at = models.DateTimeField(auto_now_add=True)
+   
     def __str__(self):
         return self.name
+
+
+
+class Task(models.Model):
+    PROJECT_PHASES = [
+        ('UX/UI', 'UX/UI'),
+        ('Architecture', 'Architecture'),
+        ('Frontend', 'Frontend'),
+        ('Backend', 'Backend'),
+        ('Testing', 'Testing'),
+        ('Deployment', 'Deployment'),
+    ]
+
+    PRIORITY_CHOICES = [
+        ('Low', 'Low'),
+        ('Medium', 'Medium'),
+        ('High', 'High'),
+    ]
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_tasks')
+    title = models.CharField(max_length=255)
+    status = models.CharField(max_length=50, default='To Do')  # e.g. To Do, In Progress, Done
+    task_type = models.CharField(max_length=50, choices=PROJECT_PHASES, blank=True, null=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, blank=True, null=True)
+    due_date = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
     
 class DailyTask(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -32,11 +66,11 @@ class DailyTask(models.Model):
     
 class StudentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='supervised_students', limit_choices_to={'role': 'admin'})
     program = models.CharField(max_length=100)
     co_supervisor = models.CharField(max_length=100, blank=True, null=True)
     research_title = models.CharField(max_length=255)
     year = models.CharField(max_length=50) 
-    supervisor = models.ForeignKey(SupervisorProfile, on_delete=models.SET_NULL, null=True, related_name='students')
     
     def __str__(self):
         return self.user.get_full_name()
@@ -126,4 +160,27 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.get_full_name()} – {self.timestamp.strftime('%H:%M')}"
+
+
+
+class TeamMember(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=255)
+    role = models.CharField(max_length=100)
+   
+    def __str__(self):
+        return self.full_name or self.user.get_full_name()
+
+
+class Assignment(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='assignments')
+    team_member = models.ForeignKey(TeamMember, on_delete=models.CASCADE, related_name='assignments')
+    responsibility = models.TextField()
+    assigned_at = models.DateTimeField(auto_now_add=True)
+   
+    class Meta:
+        unique_together = ('project', 'team_member')
+   
+    def __str__(self):
+        return f"{self.team_member} on {self.project}"
 

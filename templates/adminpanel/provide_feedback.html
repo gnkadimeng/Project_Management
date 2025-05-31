@@ -1,13 +1,15 @@
 {% extends 'adminpanel/index.html' %}
-{% load static %}
+{% load widget_tweaks %}
 {% block content %}
-<div class="container mt-5">
-    <h4>Provide Feedback for: <strong>{{ submission.title }}</strong></h4>
+<div class="container mt-4">
+    <h4>Provide Feedback for {{ submission.student.get_full_name }}</h4>
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button class="btn btn-primary">Submit Feedback</button>
-        <a href="{% url 'supervisor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        {{ form.non_field_errors }}
+        {{ form.comments.label_tag }} {{ form.comments|add_class:"form-control mb-3" }}
+        {{ form.uploaded_file.label_tag }} {{ form.uploaded_file|add_class:"form-control mb-3" }}
+        {{ form.status.label_tag }} {{ form.status|add_class:"form-select mb-3" }}
+        <button type="submit" class="btn btn-primary">Submit Feedback</button>
     </form>
 </div>
 {% endblock %}

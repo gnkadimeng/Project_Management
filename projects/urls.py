@@ -21,6 +21,17 @@ urlpatterns = [
     path('notification/read/<int:notif_id>/', views.mark_notification_read, name='mark_notification_read'),
     path('submit-meeting/', views.submit_meeting_request, name='submit_meeting'),
     path('send-chat/', views.send_chat_message, name='send_chat'),
+    path('team/', views.team_dashboard, name='team_dashboard'),
+    path('create/', views.create_project, name='create_project'),
+    path('project/<int:project_id>/', views.project_detail, name='project_detail'),
+    path('project/<int:project_id>/delete/', views.delete_project, name='delete_project'),
+    path('assignment/<int:assignment_id>/remove/', views.remove_assignment, name='remove_assignment'),
+    path('assign/', views.assign_projects_view, name='assign_projects'),
+    path('create_project/', views.create_project, name='create_project'),
+    path('project_detail/<int:project_id>/', views.project_detail, name='project_detail'),
+    path('staff/create-task/', views.staff_create_task, name='staff_create_task'),
+    path('staff/edit-task/<int:task_id>/', views.edit_task, name='edit_task'),
+    path('update-task-status/<int:task_id>/', views.update_task_status, name='update_task_status'),
 
 ]
 

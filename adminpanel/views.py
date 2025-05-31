@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import CostCentre, Expenditure, SupervisorProfile, SupervisorFeedback
 from django.http import JsonResponse
 from .models import Project
-from projects.models import Submission
+from projects.models import Submission, StudentProfile, Meeting, ChatMessage
 from django.contrib.auth import get_user_model
 from .forms import SupervisorFeedbackForm
 
@@ -79,12 +79,13 @@ def get_expenditures(request, cost_centre_id):
 def admin_kanban(request):
     return render(request, 'adminpanel/admin_kanban.html')
 
-@login_required
-def supervisor_dashboard(request):
-    return render(request, 'adminpanel/supervisor_dashboard.html')
+# @login_required
+# def supervisor_dashboard(request):
+#     return render(request, 'adminpanel/supervisor_dashboard.html')
 
 def is_supervisor(user):
-    return hasattr(user, 'supervisorprofile')
+    return user.is_authenticated and user.role == 'admin'
+
 
 @login_required
 @user_passes_test(is_supervisor)
@@ -113,5 +114,47 @@ def provide_feedback(request, submission_id):
     return render(request, 'adminpanel/provide_feedback.html', {
         'form': form,
         'submission': submission
+    })
+
+# @login_required
+# @user_passes_test(is_supervisor)
+# def supervisor_dashboard(request):
+#     supervisor = request.user.supervisorprofile
+#     submissions = Submission.objects.filter(student__supervisor=request.user)
+#     meetings = Meeting.objects.filter(supervisor=supervisor)
+#     chat_messages = ChatMessage.objects.filter(sender=request.user)  # adjust filter if needed
+#     chat_form = ChatForm()
+#     meeting_form = MeetingRequestForm()
+
+#     return render(request, 'adminpanel/supervisor_dashboard.html', {
+#         'submissions': submissions,
+#         'meetings': meetings,
+#         'chat_messages': chat_messages,
+#         'chat_form': chat_form,
+#         'meeting_form': meeting_form,
+#     })
+
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def supervisor_dashboard(request):
+    supervisor = request.user  # This is the CustomUser with role='admin'
+
+    # Step 1: Find students supervised by this admin
+    supervised_student_users = StudentProfile.objects.filter(supervisor=supervisor).values_list('user', flat=True)
+
+    # Step 2: Filter submissions for those student users
+    submissions = Submission.objects.filter(student__in=supervised_student_users)
+
+    meetings = Meeting.objects.filter(student__in=supervised_student_users)
+    chat_messages = ChatMessage.objects.filter(sender=request.user)
+    # chat_form = ChatForm()
+    # meeting_form = MeetingRequestForm()
+
+    return render(request, 'adminpanel/supervisor_dashboard.html', {
+        'submissions': submissions,
+        'meetings': meetings,
+        'chat_messages': chat_messages,
+        # 'chat_form': chat_form,
+        # 'meeting_form': meeting_form,
     })
 

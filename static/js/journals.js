@@ -39,7 +39,35 @@ journalInfoRow.style.display = this.value === 'external' ? 'flex' : 'none';
 });
 
 // Save paper button
-savePaperBtn.addEventListener('click', savePaper);
+// savePaperBtn.addEventListener('click', savePaper);
+// static/js/journal.js
+
+document.getElementById("savePaperBtn").addEventListener("click", function () {
+    const form = document.getElementById("paperForm");
+    const formData = new FormData(form);
+
+    fetch("/manager/add-paper/", {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast("Paper added successfully!");
+            document.getElementById("paperForm").reset();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addPaperModal'));
+            modal.hide();
+            // Optionally reload or dynamically add to the table
+        } else {
+            showToast("Error: " + data.error);
+        }
+    })
+    .catch(err => console.error(err));
+});
+
 
 // Update paper button
 updatePaperBtn.addEventListener('click', updatePaper);
