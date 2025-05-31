@@ -42,15 +42,23 @@ class Task(models.Model):
         ('High', 'High'),
     ]
 
+    STATUS_CHOICES = [
+        ('todo', 'To Do'),
+        ('in_progress', 'In Progress'),
+        ('review', 'Review'),
+        ('done', 'Done'),
+    ]
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
-    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_tasks')
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_tasks', null=True, blank=True)
     title = models.CharField(max_length=255)
-    status = models.CharField(max_length=50, default='To Do')  # e.g. To Do, In Progress, Done
+    status = models.CharField(choices=STATUS_CHOICES, default='todo', max_length=20)
     task_type = models.CharField(max_length=50, choices=PROJECT_PHASES, blank=True, null=True)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, blank=True, null=True)
     due_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tasks', null=True, blank=True)
+    
     def __str__(self):
         return self.title
 
@@ -79,7 +87,7 @@ class StudentProfile(models.Model):
 class Submission(models.Model):
     DOCUMENT_TYPES = [
         ('Paper', 'Paper'),
-         ('Chapter', 'Chapter'),
+        ('Chapter', 'Chapter'),
         ('Proposal', 'Proposal'),
         ('Thesis', 'Thesis'),
         ('Report', 'Report'),

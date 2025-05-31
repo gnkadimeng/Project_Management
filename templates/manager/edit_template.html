@@ -1,0 +1,56 @@
+{% extends 'manager/home.html' %}
+{% load static %}
+
+{% block title %}Edit Template{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/templates.css' %}">
+
+<div class="container mt-4">
+    <div class="card shadow-lg rounded-3">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="bi bi-pencil-square me-2"></i>Edit Template</h4>
+        </div>
+        <form method="POST" enctype="multipart/form-data" class="p-4">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input type="text" name="title" class="form-control" value="{{ template.title }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="3" required>{{ template.description }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-select" required>
+                    <option value="Book" {% if template.category == 'Book' %}selected{% endif %}>Book Templates</option>
+                    <option value="Research" {% if template.category == 'Research' %}selected{% endif %}>Research Papers</option>
+                    <option value="Software" {% if template.category == 'Software' %}selected{% endif %}>Software Development</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Replace File (optional)</label>
+                <input type="file" name="file" class="form-control">
+                <small class="text-muted">Leave blank to keep the existing file.</small><br>
+                <a href="{{ template.file.url }}" class="btn btn-sm btn-outline-secondary mt-2" download>
+                    <i class="bi bi-download me-1"></i> Download Current File
+                </a>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'templates' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

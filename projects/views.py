@@ -443,59 +443,5 @@ def team_dashboard(request):
     }
     return render(request, 'projects/team_dashboard.html', context)
 
-@login_required
-def assign_projects_view(request):
-    projects = Project.objects.filter(created_by=request.user)
-    selected_project = None
-    assignments = None
-    assignment_form = None
-    eligible_users = get_user_model().objects.exclude(role='student')
-
-    project_id = request.GET.get('project_id')
-    if project_id:
-        selected_project = get_object_or_404(Project, id=project_id)
-        assignments = selected_project.assignments.all()
-        assignment_form = AssignmentForm()
-
-    context = {
-        'projects': projects,
-        'project': selected_project,
-        'assignments': assignments,
-        'assignment_form': assignment_form,
-        'eligible_users': eligible_users,
-    }
-    return render(request, 'manager/assign.html', context)
-
-
-
-def create_project(request):
-    if request.method == 'POST':
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            project = form.save(commit=False)
-            project.created_by = request.user
-            project.save()
-            messages.success(request, 'Project created successfully!')
-            return redirect('project_detail', project_id=project.id)
-    else:
-        form = ProjectForm()
-   
-    return render(request, 'manager/create_project.html', {'form': form})
-
-@login_required
-def project_detail(request, project_id):
-    project = get_object_or_404(Project, id=project_id, created_by=request.user)
-
-    if request.method == 'POST':
-        assignment_form = AssignmentForm(request.POST)
-        if assignment_form.is_valid():
-            assignment = assignment_form.save(commit=False)
-            assignment.project = project
-            assignment.save()
-            messages.success(request, f'{assignment.team_member} assigned!')
-            return redirect(f"{reverse('assign_projects')}?project_id={project.id}")
-
-    return redirect(f"{reverse('assign_projects')}?project_id={project.id}")
-
 
 

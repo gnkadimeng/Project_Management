@@ -1,5 +1,7 @@
 {% extends 'manager/home.html' %}
 {% load static %}
+{% load custom_tags %}
+
 
 {% block title %}Kanban Board{% endblock %}
 
@@ -484,628 +486,182 @@
         }
     </style>
 
-            <!-- Welcome Box -->
-            <div class="welcome-box">
-                <h3>Kanban Board!</h3>
-                <p>Organize your tasks efficiently with the Kanban method.</p>
-                <div class="progress mt-2" style="width: 75%; height: 10px;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
-                </div>
-            </div>
+<!-- Welcome Box -->
+<div class="welcome-box">
+    <h3>Kanban Board!</h3>
+    <p>Organize your tasks efficiently with the Kanban method.</p>
+    <div class="progress mt-2" style="width: 75%; height: 10px;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+    </div>
+</div>
 
-            <div class="container-fluid py-4">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <!-- Main Task Fields -->
-                            <div class="col-md-3">
-                                <input type="text" id="taskTitle" class="form-control" placeholder="Project Name">
-                            </div>
-                            <div class="col-md-3">
-                                <textarea id="task-description" class="form-control" placeholder="Task Name" rows="1"></textarea>
-                            </div>
-                            <div class="col-md-2">
-                                <select id="taskPriority" class="form-select">
-                                    <option value="low">Low</option>
-                                    <option value="medium" selected>Medium</option>
-                                    <option value="high">High</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <input type="date" id="taskDate" class="form-control">
-                            </div>
-                            
-                            <!-- Task Type Checkboxes -->
-                            <div class="col-md-12 mt-3">
-                                <div class="d-flex flex-wrap gap-3">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="documentTag">
-                                        <label class="form-check-label" for="documentTag">Document</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="meetingTag">
-                                        <label class="form-check-label" for="meetingTag">Meeting</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="presentationTag">
-                                        <label class="form-check-label" for="presentationTag">Presentation</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="reportTag">
-                                        <label class="form-check-label" for="reportTag">Report</label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Submit Button -->
-                            <div class="col-12 text-center mt-4">
-                                <button class="btn btn-primary px-5" id="saveTask">Add Task</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Kanban Board -->
-                <div class="kanban-container d-flex gap-4">
-                    <div class="kanban-column" id="todo">
-                        <h4>To Do</h4>
-                    </div>
-                    <div class="kanban-column" id="in-progress">
-                        <h4>In Progress</h4>
-                    </div>
-                    <div class="kanban-column" id="review">
-                        <h4>Review</h4>
-                    </div>
-                    <div class="kanban-column" id="complete">
-                        <h4>Complete</h4>
-                    </div>
-                </div>
-                
-                <div class="mb-4 d-flex justify-content-center">
-                    <button id="generate-report-btn" class="btn btn-primary me-2">Generate Report</button>
-                    <button id="download-report-btn" class="btn btn-primary me-2">Download Report</button>
-                    <button id="send-report-btn" class="btn btn-primary">Send Report</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Edit Task Modal -->
-        <div class="modal fade" id="editTaskModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Task</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" id="edit-task-title" class="form-control mb-2" placeholder="Project Name">
-                        <textarea id="edit-task-description" class="form-control mb-2" placeholder="Task Name"></textarea>
-                        <select id="edit-task-priority" class="form-select mb-2">
-                            <option value="low">Low Priority</option>
-                            <option value="medium">Medium Priority</option>
-                            <option value="high">High Priority</option>
-                        </select>
-                        <input type="date" id="edit-task-due-date" class="form-control mb-2">
-                        
-                        <!-- Task Type Checkboxes -->
-                        <div class="d-flex flex-wrap gap-3 mt-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="edit-documentTag">
-                                <label class="form-check-label" for="edit-documentTag">Document</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="edit-meetingTag">
-                                <label class="form-check-label" for="edit-meetingTag">Meeting</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="edit-presentationTag">
-                                <label class="form-check-label" for="edit-presentationTag">Presentation</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="edit-reportTag">
-                                <label class="form-check-label" for="edit-reportTag">Report</label>
-                            </div>
-                        </div>
-                        
-                        <!-- Subtasks Section -->
-                        <div class="mt-3">
-                            <h6>Subtasks</h6>
-                            <div id="edit-subtask-list" class="subtask-list"></div>
-                            <div class="add-subtask">
-                                <input type="text" id="edit-new-subtask" class="form-control form-control-sm" placeholder="Add subtask">
-                                <button id="edit-add-subtask-btn" class="btn btn-sm btn-primary">Add</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" id="save-task-btn" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="dashboard-container">
+    <div class="header mb-4">
+        <a href="{% url 'manager_dashboard' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+        </a>
+        <h3 class="mt-3">Project Manager Kanban</h3>
+        <p class="text-muted">Track and manage your tasks across different phases</p>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Add Task Modal Trigger -->
+    <div class="mb-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <i class="bi bi-plus-circle me-2"></i>Add New Task
+        </button>
+    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sidebar toggle functionality
-            const toggleBtn = document.getElementById('toggleBtn');
-            const sidebar = document.getElementById('sidebar');
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                const icon = toggleBtn.querySelector('i');
-                if (sidebar.classList.contains('collapsed')) {
-                    icon.classList.remove('bi-chevron-left');
-                    icon.classList.add('bi-chevron-right');
-                } else {
-                    icon.classList.remove('bi-chevron-right');
-                    icon.classList.add('bi-chevron-left');
-                }
-            });
-            
-            mobileMenuBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('show');
-            });
-            
-            // Initialize tasks array
-            let tasks = JSON.parse(localStorage.getItem('kanbanTasks')) || [];
-            
-            // DOM elements
-            const saveTaskBtn = document.getElementById('saveTask');
-            const taskTitleInput = document.getElementById('taskTitle');
-            const taskDescriptionInput = document.getElementById('task-description');
-            const taskPrioritySelect = document.getElementById('taskPriority');
-            const taskDateInput = document.getElementById('taskDate');
-            
-            // Task type checkboxes
-            const documentTag = document.getElementById('documentTag');
-            const meetingTag = document.getElementById('meetingTag');
-            const presentationTag = document.getElementById('presentationTag');
-            const reportTag = document.getElementById('reportTag');
-            
-            // Kanban columns
-            const todoColumn = document.getElementById('todo');
-            const inProgressColumn = document.getElementById('in-progress');
-            const reviewColumn = document.getElementById('review');
-            const completeColumn = document.getElementById('complete');
-            
-            // Edit modal elements
-            const editTaskModal = new bootstrap.Modal(document.getElementById('editTaskModal'));
-            const editTaskTitle = document.getElementById('edit-task-title');
-            const editTaskDescription = document.getElementById('edit-task-description');
-            const editTaskPriority = document.getElementById('edit-task-priority');
-            const editTaskDueDate = document.getElementById('edit-task-due-date');
-            const editDocumentTag = document.getElementById('edit-documentTag');
-            const editMeetingTag = document.getElementById('edit-meetingTag');
-            const editPresentationTag = document.getElementById('edit-presentationTag');
-            const editReportTag = document.getElementById('edit-reportTag');
-            const editSubtaskList = document.getElementById('edit-subtask-list');
-            const editNewSubtask = document.getElementById('edit-new-subtask');
-            const editAddSubtaskBtn = document.getElementById('edit-add-subtask-btn');
-            const saveTaskBtnModal = document.getElementById('save-task-btn');
-            
-            let currentEditingTaskId = null;
-            
-            // Generate a unique ID for tasks
-            function generateId() {
-                return Date.now().toString(36) + Math.random().toString(36).substr(2);
-            }
-            
-            // Save tasks to localStorage
-            function saveTasks() {
-                localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
-            }
-            
-            // Render all tasks
-            function renderTasks() {
-                // Clear all columns
-                todoColumn.innerHTML = '<h4>To Do</h4>';
-                inProgressColumn.innerHTML = '<h4>In Progress</h4>';
-                reviewColumn.innerHTML = '<h4>Review</h4>';
-                completeColumn.innerHTML = '<h4>Complete</h4>';
-                
-                // Get current date for overdue check
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                // Render each task in the appropriate column
-                tasks.forEach(task => {
-                    const taskElement = createTaskElement(task);
-                    
-                    // Check if task is overdue
-                    if (task.dueDate) {
-                        const dueDate = new Date(task.dueDate);
-                        dueDate.setHours(0, 0, 0, 0);
-                        
-                        if (dueDate < today && task.status !== 'complete') {
-                            taskElement.classList.add('overdue');
-                        }
-                    }
-                    
-                    // Append to the appropriate column
-                    switch(task.status) {
-                        case 'todo':
-                            todoColumn.appendChild(taskElement);
-                            break;
-                        case 'in-progress':
-                            inProgressColumn.appendChild(taskElement);
-                            break;
-                        case 'review':
-                            reviewColumn.appendChild(taskElement);
-                            break;
-                        case 'complete':
-                            completeColumn.appendChild(taskElement);
-                            break;
-                    }
-                });
-                
-                // Make tasks draggable
-                makeTasksDraggable();
-            }
-            
-            // Create a task element
-            function createTaskElement(task) {
-                const taskElement = document.createElement('div');
-                taskElement.className = `kanban-task ${task.priority}`;
-                taskElement.dataset.taskId = task.id;
-                taskElement.draggable = true;
-                
-                // Task title (will be red if overdue)
-                const titleElement = document.createElement('div');
-                titleElement.className = 'task-title';
-                titleElement.textContent = task.title;
-                
-                // Task description
-                const descriptionElement = document.createElement('div');
-                descriptionElement.className = 'task-description';
-                descriptionElement.textContent = task.description;
-                
-                // Due date
-                const dueDateElement = document.createElement('div');
-                dueDateElement.className = 'task-due-date';
-                dueDateElement.textContent = task.dueDate ? `Due: ${formatDate(task.dueDate)}` : 'No due date';
-                
-                // Priority
-                const priorityElement = document.createElement('div');
-                priorityElement.className = `task-priority priority-${task.priority}`;
-                priorityElement.textContent = `${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority`;
-                
-                // Tags
-                const tagsElement = document.createElement('div');
-                tagsElement.className = 'task-tags';
-                
-                if (task.document) tagsElement.appendChild(createTagElement('Document'));
-                if (task.meeting) tagsElement.appendChild(createTagElement('Meeting'));
-                if (task.presentation) tagsElement.appendChild(createTagElement('Presentation'));
-                if (task.report) tagsElement.appendChild(createTagElement('Report'));
-                
-                // Subtasks
-                const subtaskContainer = document.createElement('div');
-                if (task.subtasks && task.subtasks.length > 0) {
-                    const subtaskList = document.createElement('div');
-                    subtaskList.className = 'subtask-list';
-                    
-                    task.subtasks.forEach(subtask => {
-                        const subtaskItem = document.createElement('div');
-                        subtaskItem.className = 'subtask-item';
-                        
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        checkbox.className = 'subtask-checkbox';
-                        checkbox.checked = subtask.completed;
-                        checkbox.addEventListener('change', function() {
-                            subtask.completed = this.checked;
-                            saveTasks();
-                        });
-                        
-                        const subtaskText = document.createElement('span');
-                        subtaskText.className = 'subtask-text' + (subtask.completed ? ' subtask-completed' : '');
-                        subtaskText.textContent = subtask.text;
-                        
-                        subtaskItem.appendChild(checkbox);
-                        subtaskItem.appendChild(subtaskText);
-                        subtaskList.appendChild(subtaskItem);
-                    });
-                    
-                    subtaskContainer.appendChild(subtaskList);
-                }
-                
-                // Add subtask button (only for incomplete tasks)
-                if (task.status !== 'complete') {
-                    const addSubtaskDiv = document.createElement('div');
-                    addSubtaskDiv.className = 'add-subtask';
-                    
-                    const subtaskInput = document.createElement('input');
-                    subtaskInput.type = 'text';
-                    subtaskInput.placeholder = 'Add subtask';
-                    subtaskInput.className = 'form-control form-control-sm';
-                    
-                    const addSubtaskBtn = document.createElement('button');
-                    addSubtaskBtn.className = 'btn btn-sm btn-primary';
-                    addSubtaskBtn.textContent = 'Add';
-                    addSubtaskBtn.addEventListener('click', function() {
-                        if (subtaskInput.value.trim()) {
-                            if (!task.subtasks) task.subtasks = [];
-                            task.subtasks.push({
-                                text: subtaskInput.value.trim(),
-                                completed: false
-                            });
-                            saveTasks();
-                            renderTasks();
-                            subtaskInput.value = '';
-                        }
-                    });
-                    
-                    addSubtaskDiv.appendChild(subtaskInput);
-                    addSubtaskDiv.appendChild(addSubtaskBtn);
-                    subtaskContainer.appendChild(addSubtaskDiv);
-                }
-                
-                // Task actions
-                const actionsElement = document.createElement('div');
-                actionsElement.className = 'task-actions';
-                
-                const editButton = document.createElement('button');
-                editButton.innerHTML = '<i class="bi bi-pencil"></i> Edit';
-                editButton.addEventListener('click', () => openEditModal(task.id));
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.innerHTML = '<i class="bi bi-trash"></i> Delete';
-                deleteButton.addEventListener('click', () => deleteTask(task.id));
-                
-                actionsElement.appendChild(editButton);
-                actionsElement.appendChild(deleteButton);
-                
-                // Assemble the task element
-                taskElement.appendChild(titleElement);
-                taskElement.appendChild(descriptionElement);
-                taskElement.appendChild(dueDateElement);
-                taskElement.appendChild(priorityElement);
-                taskElement.appendChild(tagsElement);
-                taskElement.appendChild(subtaskContainer);
-                taskElement.appendChild(actionsElement);
-                
-                return taskElement;
-            }
-            
-            // Create a tag element
-            function createTagElement(text) {
-                const tag = document.createElement('span');
-                tag.className = 'task-tag';
-                tag.textContent = text;
-                return tag;
-            }
-            
-            // Format date for display
-            function formatDate(dateString) {
-                const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                return new Date(dateString).toLocaleDateString(undefined, options);
-            }
-            
-            // Make tasks draggable
-            function makeTasksDraggable() {
-                const taskElements = document.querySelectorAll('.kanban-task');
-                
-                taskElements.forEach(task => {
-                    task.addEventListener('dragstart', dragStart);
-                    task.addEventListener('dragend', dragEnd);
-                });
-                
-                const columns = document.querySelectorAll('.kanban-column');
-                
-                columns.forEach(column => {
-                    column.addEventListener('dragover', dragOver);
-                    column.addEventListener('dragenter', dragEnter);
-                    column.addEventListener('dragleave', dragLeave);
-                    column.addEventListener('drop', dragDrop);
+    <!-- Kanban Board Grouped by Project -->
+    {% for project, tasks_by_status in projects_tasks.items %}
+        <h4 class="mt-5">{{ project.title }}</h4>
+        <div class="kanban-board row">
+            {% for status in statuses %}
+            <div class="col-lg-3">
+                <div class="kanban-column">
+                    <h5 class="kanban-title">{{ status }}</h5>
+                    <div class="kanban-list" data-status="{{ status }}" id="{{ status|slugify }}">
+                        {% for task in tasks_by_status|get_item:status %}
+                        <div class="kanban-card" data-id="{{ task.id }}">
+                            <strong>{{ task.title }}</strong>
+                            <div class="mt-1">
+                                <span class="badge {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                    {{ task.priority }}
+                                </span>
+                                {% if task.due_date %}
+                                    {% if task.due_date < today %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                    {% elif task.due_date == today %}
+                                        <span class="badge bg-warning text-dark">Due Today</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Due: {{ task.due_date }}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Assigned to: {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</small>
+                            <div class="mt-1 d-flex justify-content-between">
+                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editTaskModal{{ task.id }}">Edit</button>
+                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal{{ task.id }}">Delete</button>
+                            </div>
+                        </div>
+
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editTaskModal{{ task.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form method="POST" action="{% url 'edit_task' task.id %}" class="modal-content">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Task</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input type="text" name="title" class="form-control mb-2" value="{{ task.title }}">
+                                        <select name="priority" class="form-select mb-2">
+                                            {% for p in priorities %}
+                                                <option value="{{ p }}" {% if p == task.priority %}selected{% endif %}>{{ p }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <input type="date" name="due_date" class="form-control mb-2" value="{{ task.due_date }}">
+                                        <select name="status" class="form-select mb-2">
+                                            {% for status in statuses %}
+                                                <option value="{{ status }}" {% if status == task.status %}selected{% endif %}>{{ status }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteTaskModal{{ task.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <form method="POST" action="{% url 'delete_task' task.id %}" class="modal-content">
+                                    {% csrf_token %}
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Delete Task</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete: <strong>{{ task.title }}</strong>?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+    <!-- Add Task Modal -->
+    <div class="modal fade" id="addTaskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form method="POST" action="{% url 'add_task' %}" class="modal-content">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Task</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" name="title" class="form-control mb-2" placeholder="Task Title" required>
+                    <select name="priority" class="form-select mb-2">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                    <input type="date" name="due_date" class="form-control mb-2">
+                    <select name="status" class="form-select mb-2">
+                        {% for status in statuses %}
+                            <option value="{{ status }}">{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="project" class="form-select mb-2">
+                        {% for proj in all_projects %}
+                            <option value="{{ proj.id }}">{{ proj.title }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="assigned_to" class="form-select mb-2">
+                        {% for user in eligible_users %}
+                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll(".kanban-list").forEach(list => {
+        new Sortable(list, {
+            group: 'kanban',
+            animation: 150,
+            onEnd: function (evt) {
+                const taskId = evt.item.dataset.id;
+                const newStatus = evt.to.dataset.status;
+
+                fetch(`/projects/update-task-status/${taskId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
                 });
             }
-            
-            // Drag and drop functions
-            let draggedTask = null;
-            
-            function dragStart() {
-                draggedTask = this;
-                setTimeout(() => this.style.opacity = '0.4', 0);
-            }
-            
-            function dragEnd() {
-                this.style.opacity = '1';
-            }
-            
-            function dragOver(e) {
-                e.preventDefault();
-            }
-            
-            function dragEnter(e) {
-                e.preventDefault();
-                this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
-            }
-            
-            function dragLeave() {
-                this.style.backgroundColor = '';
-            }
-            
-            function dragDrop() {
-                this.style.backgroundColor = '';
-                
-                if (draggedTask) {
-                    const taskId = draggedTask.dataset.taskId;
-                    const newStatus = this.id;
-                    
-                    // Update task status
-                    const task = tasks.find(t => t.id === taskId);
-                    if (task) {
-                        task.status = newStatus;
-                        saveTasks();
-                        renderTasks();
-                    }
-                }
-            }
-            
-            // Add new task
-            saveTaskBtn.addEventListener('click', function() {
-                const title = taskTitleInput.value.trim();
-                const description = taskDescriptionInput.value.trim();
-                const priority = taskPrioritySelect.value;
-                const dueDate = taskDateInput.value;
-                
-                if (title && description) {
-                    const newTask = {
-                        id: generateId(),
-                        title,
-                        description,
-                        priority,
-                        dueDate,
-                        document: documentTag.checked,
-                        meeting: meetingTag.checked,
-                        presentation: presentationTag.checked,
-                        report: reportTag.checked,
-                        status: 'todo',
-                        subtasks: []
-                    };
-                    
-                    tasks.push(newTask);
-                    saveTasks();
-                    renderTasks();
-                    
-                    // Clear inputs
-                    taskTitleInput.value = '';
-                    taskDescriptionInput.value = '';
-                    taskPrioritySelect.value = 'medium';
-                    taskDateInput.value = '';
-                    documentTag.checked = false;
-                    meetingTag.checked = false;
-                    presentationTag.checked = false;
-                    reportTag.checked = false;
-                } else {
-                    alert('Please fill in both project name and task name');
-                }
-            });
-            
-            // Open edit modal
-            function openEditModal(taskId) {
-                const task = tasks.find(t => t.id === taskId);
-                if (task) {
-                    currentEditingTaskId = taskId;
-                    
-                    editTaskTitle.value = task.title;
-                    editTaskDescription.value = task.description;
-                    editTaskPriority.value = task.priority;
-                    editTaskDueDate.value = task.dueDate || '';
-                    editDocumentTag.checked = task.document || false;
-                    editMeetingTag.checked = task.meeting || false;
-                    editPresentationTag.checked = task.presentation || false;
-                    editReportTag.checked = task.report || false;
-                    
-                    // Render subtasks
-                    editSubtaskList.innerHTML = '';
-                    if (task.subtasks && task.subtasks.length > 0) {
-                        task.subtasks.forEach((subtask, index) => {
-                            const subtaskItem = document.createElement('div');
-                            subtaskItem.className = 'subtask-item';
-                            
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            checkbox.className = 'subtask-checkbox';
-                            checkbox.checked = subtask.completed;
-                            checkbox.addEventListener('change', function() {
-                                task.subtasks[index].completed = this.checked;
-                            });
-                            
-                            const subtaskText = document.createElement('span');
-                            subtaskText.className = 'subtask-text' + (subtask.completed ? ' subtask-completed' : '');
-                            subtaskText.textContent = subtask.text;
-                            
-                            const deleteBtn = document.createElement('button');
-                            deleteBtn.className = 'btn btn-sm btn-link text-danger';
-                            deleteBtn.innerHTML = '<i class="bi bi-trash"></i>';
-                            deleteBtn.addEventListener('click', function() {
-                                task.subtasks.splice(index, 1);
-                                openEditModal(taskId); // Refresh the list
-                            });
-                            
-                            subtaskItem.appendChild(checkbox);
-                            subtaskItem.appendChild(subtaskText);
-                            subtaskItem.appendChild(deleteBtn);
-                            editSubtaskList.appendChild(subtaskItem);
-                        });
-                    }
-                    
-                    editTaskModal.show();
-                }
-            }
-            
-            // Add subtask in edit modal
-            editAddSubtaskBtn.addEventListener('click', function() {
-                if (editNewSubtask.value.trim()) {
-                    const task = tasks.find(t => t.id === currentEditingTaskId);
-                    if (task) {
-                        if (!task.subtasks) task.subtasks = [];
-                        task.subtasks.push({
-                            text: editNewSubtask.value.trim(),
-                            completed: false
-                        });
-                        openEditModal(currentEditingTaskId); // Refresh the list
-                        editNewSubtask.value = '';
-                    }
-                }
-            });
-            
-            // Save edited task
-            saveTaskBtnModal.addEventListener('click', function() {
-                const task = tasks.find(t => t.id === currentEditingTaskId);
-                if (task) {
-                    task.title = editTaskTitle.value.trim();
-                    task.description = editTaskDescription.value.trim();
-                    task.priority = editTaskPriority.value;
-                    task.dueDate = editTaskDueDate.value || null;
-                    task.document = editDocumentTag.checked;
-                    task.meeting = editMeetingTag.checked;
-                    task.presentation = editPresentationTag.checked;
-                    task.report = editReportTag.checked;
-                    
-                    saveTasks();
-                    renderTasks();
-                    editTaskModal.hide();
-                }
-            });
-            
-            // Delete task
-            function deleteTask(taskId) {
-                if (confirm('Are you sure you want to delete this task?')) {
-                    tasks = tasks.filter(t => t.id !== taskId);
-                    saveTasks();
-                    renderTasks();
-                }
-            }
-            
-            // Generate report
-            document.getElementById('generate-report-btn').addEventListener('click', function() {
-                alert('Report generated in console (for demo purposes)');
-                console.log('Tasks Report:', tasks);
-            });
-            
-            // Download report
-            document.getElementById('download-report-btn').addEventListener('click', function() {
-                alert('Download functionality would be implemented here');
-                // In a real implementation, this would generate a PDF or CSV
-            });
-            
-            // Send report
-            document.getElementById('send-report-btn').addEventListener('click', function() {
-                alert('Email sending functionality would be implemented here');
-                // In a real implementation, this would send an email with the report
-            });
-            
-            // Initial render
-            renderTasks();
         });
-    </script>
+    });
+</script>
 {% endblock %}
