@@ -1,0 +1,447 @@
+{% extends 'adminpanel/index.html' %}
+{% load static %}
+
+{% block title %}Paper Tracking{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/journal.css' %}">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+
+<div class="welcome-box">
+    <h1 class="mb-4">Research Paper Tracking</h1>
+    <div class="progress mt-2" style="width: 75%; height: 10px;"></div>
+</div>
+
+
+    <!-- Main Content -->
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1></h1>
+            <div class="d-flex">
+                 <div class="input-group" style="width: 250px;">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search papers...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs for Internal/External Papers -->
+        <ul class="nav nav-tabs mb-4" id="paperTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="internal-tab" data-bs-toggle="tab" data-bs-target="#internal-papers" type="button" role="tab">
+                    <i class="bi bi-building"></i> Internal Papers
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="external-tab" data-bs-toggle="tab" data-bs-target="#external-papers" type="button" role="tab">
+                    <i class="bi bi-globe"></i> External Papers
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="paperTabsContent">
+            <!-- Internal Papers Tab -->
+            <div class="tab-pane fade show active" id="internal-papers" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table paper-table" id="internalTable">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Authors</th>
+                                        <th>Status</th>
+                                        <th>Version</th>
+                                        <th>Last Updated</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                               <tbody id="internalPapersBody">
+                                {% for paper in internal_papers %}
+                                    <tr>
+                                    <td>{{ paper.title }}</td>
+                                    <td>{{ paper.lead_author }}{% if paper.co_authors %}, {{ paper.co_authors }}{% endif %}</td>
+                                    <td>{{ paper.status|capfirst }}</td>
+                                    <td>{{ paper.version }}</td>
+                                    <td>{{ paper.updated_at|date:"Y-m-d" }}</td>
+                                   <td>
+    <a href="{{ paper.manuscript.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+        <i class="bi bi-eye"></i> View
+    </a>
+    <button 
+        class="btn btn-sm btn-warning editBtn"
+        data-id="{{ paper.id }}"
+        data-title="{{ paper.title }}"
+        data-status="{{ paper.status }}"
+        data-version="{{ paper.version }}"
+        data-lead="{{ paper.lead_author }}"
+        data-co="{{ paper.co_authors }}"
+        data-journal="{{ paper.target_journal }}"
+        data-submission="{{ paper.submission_date }}"
+        data-abstract="{{ paper.abstract }}"
+        data-type="{{ paper.internal_external }}"
+        data-bs-toggle="modal"
+        data-bs-target="#editPaperModal"
+    >
+        <i class="bi bi-pencil-square"></i> Edit
+    </button>
+    <form method="POST" action="{% url 'delete_paper' paper.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+            <i class="bi bi-trash"></i> Delete
+        </button>
+    </form>
+</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="6" class="text-center">No internal papers found.</td></tr>
+                                {% endfor %}
+                                </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- External Papers Tab -->
+            <div class="tab-pane fade" id="external-papers" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table paper-table" id="externalTable">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Authors</th>
+                                        <th>Journal/Conference</th>
+                                        <th>Status</th>
+                                        <th>Submission Date</th>
+                                        <th>Decision Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                               <tbody id="externalPapersBody">
+                                    {% for paper in external_papers %}
+                                        <tr>
+                                        <td>{{ paper.title }}</td>
+                                        <td>{{ paper.lead_author }}{% if paper.co_authors %}, {{ paper.co_authors }}{% endif %}</td>
+                                        <td>{{ paper.target_journal }}</td>
+                                        <td>{{ paper.status|capfirst }}</td>
+                                        <td>{{ paper.submission_date }}</td>
+                                        <td>{{ paper.updated_at|date:"Y-m-d" }}</td>
+                                     <td>
+    <a href="{{ paper.manuscript.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+        <i class="bi bi-eye"></i> View
+    </a>
+    <button 
+        class="btn btn-sm btn-warning editBtn"
+        data-id="{{ paper.id }}"
+        data-title="{{ paper.title }}"
+        data-status="{{ paper.status }}"
+        data-version="{{ paper.version }}"
+        data-lead="{{ paper.lead_author }}"
+        data-co="{{ paper.co_authors }}"
+        data-journal="{{ paper.target_journal }}"
+        data-submission="{{ paper.submission_date }}"
+        data-abstract="{{ paper.abstract }}"
+        data-type="{{ paper.internal_external }}"
+        data-bs-toggle="modal"
+        data-bs-target="#editPaperModal"
+    >
+        <i class="bi bi-pencil-square"></i> Edit
+    </button>
+    <form method="POST" action="{% url 'delete_paper' paper.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+            <i class="bi bi-trash"></i> Delete
+        </button>
+    </form>
+</td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr><td colspan="7" class="text-center">No external papers found.</td></tr>
+                                    {% endfor %}
+                                    </tbody>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Paper Modal -->
+        <div class="modal fade" id="addPaperModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <form method="POST" action="{% url 'add_paper' %}" enctype="multipart/form-data" id="paperForm">
+                    {% csrf_token %}
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Research Paper</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                       
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="paperTitle" class="form-label">Paper Title *</label>
+                                    <input type="text" class="form-control" id="paperTitle" name="paperTitle" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="paperType" class="form-label">Paper Type *</label>
+                                    <select class="form-select" name="paperType" id="paperType" required>
+                                        <option value="">Select type</option>
+                                        <option value="internal">Internal</option>
+                                        <option value="external">External</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="paperStatus" class="form-label">Status *</label>
+                                    <select class="form-select" id="paperStatus" name="paperStatus" required>
+                                        <option value="">Select status</option>
+                                        <option value="draft">Draft</option>
+                                        <option value="in-progress">In Progress</option>
+                                        <option value="review">Internal Review</option>
+                                        <option value="submitted">Submitted</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="published">Published</option>
+                                        <option value="rejected">Rejected</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="currentVersion" class="form-label">Current Version *</label>
+                                    <input type="text" class="form-control" id="currentVersion" name="currentVersion" value="1.0" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="leadAuthor" class="form-label">Lead Author *</label>
+                                    <input type="text" class="form-control" id="leadAuthor" name="leadAuthor" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="coAuthors" class="form-label">Co-Authors</label>
+                                    <input type="text" class="form-control" id="coAuthors" name="coAuthors" placeholder="Separate with commas">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3" id="journalInfoRow">
+                                <div class="col-md-6">
+                                    <label for="targetJournal" class="form-label">Target Journal/Conference</label>
+                                    <input type="text" class="form-control" id="targetJournal" name="targetJournal">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="submissionDate" class="form-label">Submission Date</label>
+                                    <input type="date" class="form-control" id="submissionDate" name="submissionDate">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="paperAbstract" class="form-label">Abstract</label>
+                                <textarea class="form-control" id="paperAbstract" name="paperAbstract" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="paperFile" class="form-label">Upload Manuscript *</label>
+                                <input class="form-control" type="file" id="paperFile" name="paperFile" required>
+                            </div>
+                            
+                            <div class="alert alert-danger d-none" id="formError"></div>
+                        
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Paper</button>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Paper Modal -->
+        <div class="modal fade" id="editPaperModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Research Paper</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editPaperForm">
+                            <input type="hidden" id="editPaperId">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label for="editPaperTitle" class="form-label">Paper Title *</label>
+                                    <input type="text" class="form-control" id="editPaperTitle" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="editPaperType" class="form-label">Paper Type *</label>
+                                    <select class="form-select" id="editPaperType" name="editPaperType" required disabled>
+                                        <option value="internal">Internal</option>
+                                        <option value="external">External</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="editPaperStatus" class="form-label">Status *</label>
+                                    <select class="form-select" id="editPaperStatus" name="editPaperStatus" required>
+                                        <option value="draft">Draft</option>
+                                        <option value="in-progress">In Progress</option>
+                                        <option value="review">Internal Review</option>
+                                        <option value="submitted">Submitted</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="published">Published</option>
+                                        <option value="rejected">Rejected</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editCurrentVersion" class="form-label">Current Version *</label>
+                                    <input type="text" class="form-control" id="editCurrentVersion" name="editCurrentVersion" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="editLeadAuthor" class="form-label">Lead Author *</label>
+                                    <input type="text" class="form-control" id="editLeadAuthor" name="editLeadAuthor" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editCoAuthors" class="form-label">Co-Authors</label>
+                                    <input type="text" class="form-control" id="editCoAuthors" name="editCoAuthors" placeholder="Separate with commas">
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3" id="editJournalInfoRow">
+                                <div class="col-md-6">
+                                    <label for="editTargetJournal" class="form-label">Target Journal/Conference</label>
+                                    <input type="text" class="form-control" id="editTargetJournal" name="editTargetJournal">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="editSubmissionDate" class="form-label">Submission Date</label>
+                                    <input type="date" class="form-control" id="editSubmissionDate" name="editSubmissionDate">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editPaperAbstract" class="form-label">Abstract</label>
+                                <textarea class="form-control" id="editPaperAbstract" name="editPaperAbstract" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="editPaperFile" class="form-label">Upload New Manuscript</label>
+                                <input class="form-control" type="file" id="editPaperFile" name="editPaperFile">
+                            </div>
+                            
+                            <div class="alert alert-danger d-none" id="editFormError"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="updatePaperBtn">Update Paper</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Confirm Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this paper? This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast-position">
+            <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto" id="toastTitle">Notification</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body" id="toastMessage">
+                    Operation completed successfully.
+                </div>
+            </div>
+        </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    const editButtons = document.querySelectorAll('.editBtn');
+
+    editButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            document.getElementById('editPaperId').value = button.dataset.id;
+            document.getElementById('editPaperTitle').value = button.dataset.title;
+            document.getElementById('editPaperStatus').value = button.dataset.status;
+            document.getElementById('editCurrentVersion').value = button.dataset.version;
+            document.getElementById('editLeadAuthor').value = button.dataset.lead;
+            document.getElementById('editCoAuthors').value = button.dataset.co;
+            document.getElementById('editTargetJournal').value = button.dataset.journal;
+            document.getElementById('editSubmissionDate').value = button.dataset.submission;
+            document.getElementById('editPaperAbstract').value = button.dataset.abstract;
+            document.getElementById('editPaperType').value = button.dataset.type;
+        });
+    });
+});
+
+document.getElementById('updatePaperBtn').addEventListener('click', async function () {
+    const paperId = document.getElementById('editPaperId').value;
+    const formData = new FormData();
+
+    formData.append('paperTitle', document.getElementById('editPaperTitle').value);
+    formData.append('paperStatus', document.getElementById('editPaperStatus').value);
+    formData.append('currentVersion', document.getElementById('editCurrentVersion').value);
+    formData.append('leadAuthor', document.getElementById('editLeadAuthor').value);
+    formData.append('coAuthors', document.getElementById('editCoAuthors').value);
+    formData.append('targetJournal', document.getElementById('editTargetJournal').value);
+    formData.append('submissionDate', document.getElementById('editSubmissionDate').value);
+    formData.append('paperAbstract', document.getElementById('editPaperAbstract').value);
+
+    const manuscript = document.getElementById('editPaperFile').files[0];
+    if (manuscript) {
+        formData.append('paperFile', manuscript);
+    }
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const response = await fetch(`/manager/edit-ajax/${paperId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    });
+
+    if (response.ok) {
+        location.reload();  // Reload to reflect updates
+    } else {
+        alert("Failed to update paper.");
+    }
+});
+
+
+    </script>
+ 
+    {% endblock %}

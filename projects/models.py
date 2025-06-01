@@ -180,7 +180,7 @@ class TeamMember(models.Model):
 
 class Assignment(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='assignments')
-    team_member = models.ForeignKey(TeamMember, on_delete=models.CASCADE, related_name='assignments')
+    team_member = models.ForeignKey(TeamMember, on_delete=models.CASCADE)
     responsibility = models.TextField()
     assigned_at = models.DateTimeField(auto_now_add=True)
    

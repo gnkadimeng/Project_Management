@@ -48,12 +48,12 @@
           <i class="bi bi-people"></i> <span>Project Management</span>
         </a>
         <ul class="collapse list-unstyled ps-4" id="projectSubmenu">
-          <li><a href="{% url 'manager_journals' %}" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span>Paper</span></a></li>
-          <li><a href="{% url 'manager_books' %}" class="nav-link"><i class="bi bi-book"></i> <span>Books</span></a></li>
+          <li><a href="{% url 'manager_journal' %}" class="nav-link"><i class="bi bi-file-earmark-text"></i> <span>Paper</span></a></li>
+          <li><a href="{% url 'manager_book' %}" class="nav-link"><i class="bi bi-book"></i> <span>Books</span></a></li>
           <li><a href="{% url 'app_kanban' %}" class="nav-link"><i class="bi bi-kanban"></i> <span>Development</span></a></li>
         </ul>
       </li>
-      <li><a href="{% url 'manager_ganttchart' %}" class="nav-link"><i class="bi bi-graph-up"></i> <span>Analytics-Gantt Chart</span></a></li>
+      <!-- <li><a href="{% url 'manager_ganttchart' %}" class="nav-link"><i class="bi bi-graph-up"></i> <span>Analytics-Gantt Chart</span></a></li> -->
     </ul>
     <div class="sidebar-footer">
       <a href="{% url 'logout' %}"  class="logout-btn"><i class="bi bi-box-arrow-left"></i> <span>Logout</span></a>

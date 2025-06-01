@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import DailyTask, StudentProfile, Submission, Notification, Meeting, ChatMessage, Project, Assignment, TeamMember, Task
 from users.models import CustomUser
-from .forms import DailyTaskForm, StudentProfileForm, SubmissionForm, FeedbackReplyForm, MeetingForm, ChatForm, ProjectForm, AssignmentForm
+from .forms import DailyTaskForm, StudentProfileForm, SubmissionForm, FeedbackReplyForm, MeetingForm, ChatForm, ProjectForm, AssignmentForm, FileUploadForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from datetime import date
 from django.utils.timezone import now
@@ -52,8 +52,11 @@ from django.db.models import Q
 def dashboard(request):
     form = DailyTaskForm()
     tasks = DailyTask.objects.filter(user=request.user).order_by('-created_at')
-
     upload_form = FileUploadForm()
+
+    # NEW: Fetch project assignments
+    team_member = TeamMember.objects.filter(user=request.user).first()
+    assignments = Assignment.objects.filter(team_member=team_member) if team_member else []
 
     if request.method == 'POST':
         form = DailyTaskForm(request.POST)
@@ -66,8 +69,10 @@ def dashboard(request):
     return render(request, 'projects/dashboard.html', {
         'form': form,
         'daily_tasks': tasks,
-        'upload_form': upload_form
+        'upload_form': upload_form,
+        'assignments': assignments  # Pass to dashboard template
     })
+
 
 
 @login_required
@@ -85,18 +90,14 @@ def delete_task(request, task_id):
 
 @login_required
 def staff_kanban(request):
-    team_member = TeamMember.objects.filter(user=request.user).first()
-
     tasks = Task.objects.filter(assigned_to=request.user)
     todo_tasks = tasks.filter(status='To Do')
     in_progress_tasks = tasks.filter(status='In Progress')
     review_tasks = tasks.filter(status='Review')
     done_tasks = tasks.filter(status='Done')
 
-    assignments = Assignment.objects.filter(team_member=team_member) if team_member else []
 
     context = {
-        'assignments': assignments,
         'todo_tasks': todo_tasks,
         'in_progress_tasks': in_progress_tasks,
         'review_tasks': review_tasks,
@@ -151,16 +152,16 @@ def edit_task(request, task_id):
     # If someone tries GET on this view directly
     return redirect('staff_kanban')
 
-@csrf_exempt
-@login_required
-def update_task_status(request, task_id):
-    if request.method == 'POST':
-        task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
-        data = json.loads(request.body)
-        task.status = data.get('status')
-        task.save()
-        return JsonResponse({'success': True})
-    return JsonResponse({'error': 'Invalid method'}, status=400)
+# @csrf_exempt
+# @login_required
+# def update_task_status(request, task_id):
+#     if request.method == 'POST':
+#         task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
+#         data = json.loads(request.body)
+#         task.status = data.get('status')
+#         task.save()
+#         return JsonResponse({'success': True})
+#     return JsonResponse({'error': 'Invalid method'}, status=400)
 
 
 @csrf_exempt
@@ -336,72 +337,34 @@ def send_chat_message(request):
             message.save()
     return redirect('student_dashboard')
 
-@login_required
-def dashboard(request):
-    # Get all projects created by the current user
-    projects = Project.objects.filter(created_by=request.user)
+# @login_required
+# def dashboard(request):
+#     # Get all projects created by the current user
+#     projects = Project.objects.filter(created_by=request.user)
    
-    # Get filter parameters
-    project_type = request.GET.get('type', 'all')
-    status = request.GET.get('status', 'all')
-    search = request.GET.get('search', '')
+#     # Get filter parameters
+#     project_type = request.GET.get('type', 'all')
+#     status = request.GET.get('status', 'all')
+#     search = request.GET.get('search', '')
    
-    # Apply filters
-    if project_type != 'all':
-        projects = projects.filter(project_type=project_type)
-    if status != 'all':
-        projects = projects.filter(status=status)
-    if search:
-        projects = projects.filter(name__icontains=search)
+#     # Apply filters
+#     if project_type != 'all':
+#         projects = projects.filter(project_type=project_type)
+#     if status != 'all':
+#         projects = projects.filter(status=status)
+#     if search:
+#         projects = projects.filter(name__icontains=search)
    
-    context = {
-        'projects': projects,
-        'current_type': project_type,
-        'current_status': status,
-        'search_query': search,
-    }
-    return render(request, 'projects/dashboard.html', context)
+#     context = {
+#         'projects': projects,
+#         'current_type': project_type,
+#         'current_status': status,
+#         'search_query': search,
+#     }
+#     return render(request, 'projects/dashboard.html', context)
 
-@login_required
-def project_detail(request, project_id):
-    project = get_object_or_404(Project, id=project_id, created_by=request.user)
-   
-    if request.method == 'POST':
-        # Handle assignment form
-        assignment_form = AssignmentForm(request.POST)
-        if assignment_form.is_valid():
-            assignment = assignment_form.save(commit=False)
-            assignment.project = project
-            assignment.save()
-            messages.success(request, f'Successfully assigned {assignment.team_member} to the project!')
-            return redirect('project_detail', project_id=project.id)
-    else:
-        assignment_form = AssignmentForm()
-   
-    # Get assignments for this project
-    assignments = project.assignments.all()
-   
-    context = {
-        'project': project,
-        'assignments': assignments,
-        'assignment_form': assignment_form,
-    }
-    return render(request, 'projects/project_detail.html', context)
 
-@login_required
-def create_project(request):
-    if request.method == 'POST':
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            project = form.save(commit=False)
-            project.created_by = request.user
-            project.save()
-            messages.success(request, 'Project created successfully!')
-            return redirect('project_detail', project_id=project.id)
-    else:
-        form = ProjectForm()
-   
-    return render(request, 'projects/create_project.html', {'form': form})
+
 
 @login_required
 def delete_project(request, project_id):

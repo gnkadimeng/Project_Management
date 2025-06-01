@@ -505,106 +505,95 @@
         <p class="text-muted">Track and manage your tasks across different phases</p>
     </div>
 
-    <!-- Add Task Modal Trigger -->
     <div class="mb-3">
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
             <i class="bi bi-plus-circle me-2"></i>Add New Task
         </button>
     </div>
 
-    <!-- Kanban Board Grouped by Project -->
-    {% for project, tasks_by_status in projects_tasks.items %}
-        <h4 class="mt-5">{{ project.title }}</h4>
-        <div class="kanban-board row">
-            {% for status in statuses %}
-            <div class="col-lg-3">
-                <div class="kanban-column">
-                    <h5 class="kanban-title">{{ status_labels|dict_get:status }}</h5>
-                    <div class="kanban-list" data-status="{{ status }}" id="{{ status }}">
-                        {% for task in tasks_by_status|get_item:status %}
-                        <div class="kanban-card" data-id="{{ task.id }}">
-                            <strong>{{ task.title }}</strong>
-                            <div class="mt-1">
-                                <span class="badge {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
-                                    {{ task.priority }}
-                                </span>
-                                {% if task.due_date %}
-                                    {% if task.due_date < today %}
-                                        <span class="badge bg-danger">Overdue</span>
-                                    {% elif task.due_date == today %}
-                                        <span class="badge bg-warning text-dark">Due Today</span>
-                                    {% else %}
-                                        <span class="badge bg-info">Due: {{ task.due_date }}</span>
-                                    {% endif %}
+    <div class="kanban-board row">
+        {% for status in statuses %}
+        <div class="col-lg-3">
+            <div class="kanban-column">
+                <h5 class="kanban-title">{{ status }}</h5>
+                <div class="kanban-list" data-status="{{ status }}" id="{{ status|slugify }}">
+                    {% for task in tasks_by_status|get_item:status %}
+                    <div class="kanban-card" data-id="{{ task.id }}">
+                        <strong>{{ task.title }}</strong>
+                        <div class="mt-1">
+                            <span class="badge {% if task.priority == 'High' %}bg-danger{% elif task.priority == 'Medium' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                {{ task.priority }}
+                            </span>
+                            {% if task.due_date %}
+                                {% if task.due_date < today %}
+                                    <span class="badge bg-danger">Overdue</span>
+                                {% elif task.due_date == today %}
+                                    <span class="badge bg-warning text-dark">Due Today</span>
+                                {% else %}
+                                    <span class="badge bg-info">Due: {{ task.due_date }}</span>
                                 {% endif %}
-                            </div>
-                            <small class="text-muted">Assigned to: {{ task.assigned_to.get_full_name|default:task.assigned_to.username }}</small>
-                            <div class="mt-1 d-flex justify-content-between">
-                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editTaskModal{{ task.id }}">Edit</button>
-                                <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal{{ task.id }}">Delete</button>
-                            </div>
+                            {% endif %}
                         </div>
-
-                        <!-- Edit Modal -->
-                        <div class="modal fade" id="editTaskModal{{ task.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <form method="POST" action="{% url 'edit_task' task.id %}" class="modal-content">
-                                    {% csrf_token %}
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Edit Task</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <input type="text" name="title" class="form-control mb-2" value="{{ task.title }}">
-                                        <select name="priority" class="form-select mb-2">
-                                            {% for p in priorities %}
-                                                <option value="{{ p }}" {% if p == task.priority %}selected{% endif %}>{{ p }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <input type="date" name="due_date" class="form-control mb-2" value="{{ task.due_date }}">
-                                        <select name="status" class="form-select mb-2">
-                                            {% for status in statuses %}
-                                                <option value="{{ status }}" {% if status == task.status %}selected{% endif %}>
-                                                    {{ status_labels|dict_get:status }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                                    </div>
-                                </form>
-                            </div>
+                        <div class="mt-1 d-flex justify-content-between">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editTaskModal{{ task.id }}">Edit</button>
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteTaskModal{{ task.id }}">Delete</button>
                         </div>
-
-                        <!-- Delete Modal -->
-                        <div class="modal fade" id="deleteTaskModal{{ task.id }}" tabindex="-1">
-                            <div class="modal-dialog">
-                                <form method="POST" action="{% url 'delete_task' task.id %}" class="modal-content">
-                                    {% csrf_token %}
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Delete Task</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        Are you sure you want to delete: <strong>{{ task.title }}</strong>?
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
                     </div>
+
+                    <div class="modal fade" id="editTaskModal{{ task.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <form method="POST" action="{% url 'edit_task' task.id %}" class="modal-content">
+                                {% csrf_token %}
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Task</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <input type="text" name="title" class="form-control mb-2" value="{{ task.title }}">
+                                    <select name="priority" class="form-select mb-2">
+                                        {% for p in priorities %}
+                                            <option value="{{ p }}" {% if p == task.priority %}selected{% endif %}>{{ p }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="date" name="due_date" class="form-control mb-2" value="{{ task.due_date }}">
+                                    <select name="status" class="form-select mb-2">
+                                        {% for s in statuses %}
+                                            <option value="{{ s }}" {% if s == task.status %}selected{% endif %}>{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="deleteTaskModal{{ task.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <form method="POST" action="{% url 'delete_task' task.id %}" class="modal-content">
+                                {% csrf_token %}
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Delete Task</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete: <strong>{{ task.title }}</strong>?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
         </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
 
-    <!-- Add Task Modal -->
     <div class="modal fade" id="addTaskModal" tabindex="-1">
         <div class="modal-dialog">
             <form method="POST" action="{% url 'add_task' %}" class="modal-content">
@@ -623,17 +612,7 @@
                     <input type="date" name="due_date" class="form-control mb-2">
                     <select name="status" class="form-select mb-2">
                         {% for status in statuses %}
-                            <option value="{{ status }}">{{ status_labels|dict_get:status }}</option>
-                        {% endfor %}
-                    </select>
-                    <select name="project" class="form-select mb-2">
-                        {% for proj in all_projects %}
-                            <option value="{{ proj.id }}">{{ proj.title }}</option>
-                        {% endfor %}
-                    </select>
-                    <select name="assigned_to" class="form-select mb-2">
-                        {% for user in eligible_users %}
-                            <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                            <option value="{{ status }}">{{ status }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -647,7 +626,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-    // CSRF token setup for fetch POST
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -665,7 +643,6 @@
 
     const csrftoken = getCookie('csrftoken');
 
-    // Apply Sortable to all kanban lists
     document.querySelectorAll('.kanban-list').forEach(list => {
         new Sortable(list, {
             group: 'kanban',
@@ -674,27 +651,18 @@
                 const taskId = evt.item.dataset.id;
                 const newStatus = evt.to.dataset.status;
 
-                fetch(`/update-task-status/${taskId}/`, {
+                fetch(`/manager/update-task-status/${taskId}/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrftoken
                     },
-                    body: JSON.stringify({
-                        status: newStatus
-                    })
+                    body: JSON.stringify({ status: newStatus })
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Status update failed');
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         console.log(`Task ${taskId} moved to ${newStatus}`);
-                    } else {
-                        alert("Failed to update task status.");
                     }
                 })
                 .catch(error => {
@@ -705,5 +673,4 @@
         });
     });
 </script>
-
 {% endblock %}

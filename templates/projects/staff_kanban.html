@@ -16,33 +16,7 @@
                 </div>
             </div>
 
-<div class="container mt-4">
-    <h3 class="mb-4">My Project Assignments</h3>
 
-    {% if assignments %}
-        <div class="row">
-            {% for assignment in assignments %}
-                <div class="col-md-6 mb-3">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            {{ assignment.project.name }}
-                        </div>
-                        <div class="card-body">
-                            <p><strong>Role:</strong> {{ assignment.responsibility }}</p>
-                            <p><strong>Type:</strong> {{ assignment.project.get_project_type_display }}</p>
-                            <p><strong>Status:</strong> <span class="badge bg-success">{{ assignment.project.status }}</span></p>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="text-muted">You have no project assignments yet.</p>
-    {% endif %}
-
-    <hr class="my-5">
-
-    <h3 class="mb-4">My Task Board</h3>
 
     <!-- Add New Task Button -->
     <div class="mb-3 text-end">
@@ -367,7 +341,7 @@
             </div>
         </div>
     </div>
-</div>
+
 
 <script>
     let draggedTaskId = null;

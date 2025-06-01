@@ -1,17 +1,14 @@
 # projects/forms.py
 from django import forms
-from .models import DailyTask, StudentProfile, Submission, FeedbackReply, Meeting, ChatMessage, Project, Assignment, TeamMember
+from .models import DailyTask, StudentProfile, Submission, FeedbackReply, Meeting, ChatMessage, Project, Assignment, TeamMember, Task
 
+
+# forms.py
 class DailyTaskForm(forms.ModelForm):
     class Meta:
         model = DailyTask
         fields = ['title']
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'placeholder': 'New task...',
-                'class': 'form-control',
-            }),
-        }
+
 
 class StudentProfileForm(forms.ModelForm):
     class Meta:
@@ -67,23 +64,29 @@ class ChatForm(forms.ModelForm):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'project_type', 'due_date']
+        fields = ['name', 'description', 'project_type', 'due_date', 'status']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
 class AssignmentForm(forms.ModelForm):
+    team_member = forms.ModelChoiceField(
+        queryset=TeamMember.objects.all(),  # ✅ this is the fix
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
     class Meta:
         model = Assignment
         fields = ['team_member', 'responsibility']
         widgets = {
-            'responsibility': forms.Textarea(attrs={'rows': 3}),
+            'responsibility': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
-   
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['team_member'].queryset = TeamMember.objects.all()
-        self.fields['team_member'].label_from_instance = lambda obj: obj.full_name
 
+class FileUploadForm(forms.Form):
+    file = forms.FileField()
 
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = Task
+        fields = ['title', 'priority', 'due_date', 'status']

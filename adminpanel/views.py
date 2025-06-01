@@ -10,6 +10,7 @@ from decimal import Decimal, InvalidOperation
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.utils.dateparse import parse_date
+from manager.models import Paper
 
 
 @login_required
@@ -17,17 +18,10 @@ def admin_dashboard(request):
     return render(request, 'adminpanel/admin_dashboard.html')
 
 @login_required
-def admin_books(request):
-    return render(request, 'adminpanel/admin_books.html')
-
-@login_required
 def app_kanban(request):
     phases = ["UX/UI", "Architecture", "Frontend", "Backend", "Testing", "Deployment"]
     return render(request, 'adminpanel/app_kanban.html', {'phases': phases})
 
-@login_required
-def admin_journals(request):
-    return render(request, 'adminpanel/admin_journals.html')
 
 @login_required
 def admin_ganttchart(request):
@@ -269,3 +263,37 @@ def supervisor_dashboard(request):
         # 'meeting_form': meeting_form,
     })
 
+@login_required
+def admin_journal(request):
+    internal_papers = Paper.objects.filter(internal_external='internal').order_by('-updated_at')
+    external_papers = Paper.objects.filter(internal_external='external').order_by('-updated_at')
+    
+    return render(request, 'adminpanel/admin_journal.html', {
+        'internal_papers': internal_papers,
+        'external_papers': external_papers,
+    })
+
+@login_required
+def admin_book(request):
+    return render(request, 'adminpanel/admin_book.html')
+
+def admin_required(view_func):
+    return user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')(view_func)
+
+@admin_required
+def admin_user_kanban(request, user_id):
+    user = get_object_or_404(get_user_model(), id=user_id)
+    tasks = Task.objects.filter(assigned_to=user)
+
+    # Group by status
+    task_data = {
+        'todo': tasks.filter(status='todo'),
+        'in_progress': tasks.filter(status='in_progress'),
+        'review': tasks.filter(status='review'),
+        'done': tasks.filter(status='done'),
+    }
+
+    return render(request, 'adminpanel/partials/user_kanban.html', {
+        'user': user,
+        'task_data': task_data
+    })

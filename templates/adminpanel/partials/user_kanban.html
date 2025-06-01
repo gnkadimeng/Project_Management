@@ -1,0 +1,23 @@
+<!-- adminpanel/partials/user_kanban.html -->
+<h5 class="mt-5">{{ user.get_full_name }}'s Taskboard</h5>
+<div class="row">
+  {% for column, items in task_data.items %}
+  <div class="col-md-3">
+    <div class="card mb-3">
+      <div class="card-header bg-light">
+        <strong class="text-capitalize">{{ column.replace('_', ' ') }}</strong>
+      </div>
+      <div class="card-body" style="min-height: 200px;">
+        {% for task in items %}
+          <div class="mb-2 p-2 bg-white border rounded shadow-sm">
+            <strong>{{ task.title }}</strong><br>
+            <small class="text-muted">{{ task.description|truncatechars:50 }}</small>
+          </div>
+        {% empty %}
+          <p class="text-muted">No tasks</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
