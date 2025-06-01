@@ -69,6 +69,7 @@
                             <select name="status" id="taskStatus" class="form-select">
                                 <option value="To Do">To Do</option>
                                 <option value="In Progress">In Progress</option>
+                                <option value="Review">Review</option>
                                 <option value="Done">Done</option>
                             </select>
                         </div>
@@ -106,7 +107,7 @@
     </div>
 
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-header bg-light">
                     <strong>To Do</strong>
@@ -157,6 +158,7 @@
                         <select name="status" id="editTaskStatus{{ task.id }}" class="form-select">
                             <option value="To Do" {% if task.status == "To Do" %}selected{% endif %}>To Do</option>
                             <option value="In Progress" {% if task.status == "In Progress" %}selected{% endif %}>In Progress</option>
+                            <option value="Review" {% if task.status == "Review" %}selected{% endif %}>Review</option>
                             <option value="Done" {% if task.status == "Done" %}selected{% endif %}>Done</option>
                         </select>
                     </div>
@@ -204,7 +206,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-header bg-warning">
                     <strong>In Progress</strong>
@@ -272,7 +274,76 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-info">
+                    <strong>Review</strong>
+                </div>
+               <ul class="list-group list-group-flush drop-zone" data-status="Review">
+
+                    {% for task in in_review_tasks %}
+                    <li class="list-group-item draggable-task" draggable="true" data-task-id="{{ task.id }}">
+
+                        <strong>{{ task.title }}</strong>
+                        <div class="small text-muted">
+                                {% if task.task_type %}
+                                <span class="badge me-1 
+                                    {% if task.task_type == 'UX/UI' %} bg-primary 
+                                    {% elif task.task_type == 'Architecture' %} bg-dark 
+                                    {% elif task.task_type == 'Frontend' %} bg-success 
+                                    {% elif task.task_type == 'Backend' %} bg-secondary 
+                                    {% elif task.task_type == 'Testing' %} bg-warning text-dark 
+                                    {% elif task.task_type == 'Deployment' %} bg-info text-dark 
+                                    {% else %} bg-light text-dark 
+                                    {% endif %}">
+                                    {% if task.task_type == 'UX/UI' %}🎨{% endif %}
+                                    {% if task.task_type == 'Architecture' %}🏗️{% endif %}
+                                    {% if task.task_type == 'Frontend' %}🖥️{% endif %}
+                                    {% if task.task_type == 'Backend' %}🧩{% endif %}
+                                    {% if task.task_type == 'Testing' %}🧪{% endif %}
+                                    {% if task.task_type == 'Deployment' %}🚀{% endif %}
+                                    {{ task.task_type }}
+                                </span>
+                                {% endif %}
+
+
+                            {% if task.priority %}
+                                <span class="badge 
+                                    {% if task.priority == 'High' %} bg-danger 
+                                    {% elif task.priority == 'Medium' %} bg-warning text-dark 
+                                    {% elif task.priority == 'Low' %} bg-success 
+                                    {% else %} bg-light text-dark 
+                                    {% endif %}">
+                                    {{ task.priority }}
+                                </span>
+                                {% endif %}
+
+                            {% if task.due_date %}
+                                {% now "Y-m-d" as today %}
+                                {% with task.due_date|stringformat:"s" as due_date_str %}
+                                    {% if due_date_str < today %}
+                                        <span class="badge bg-danger">⚠️ Overdue</span>
+                                    {% elif due_date_str == today %}
+                                        <span class="badge bg-warning text-dark">📅 Due Today</span>
+                                    {% elif due_date_str <= today|add:"3" %}
+                                        <span class="badge bg-info text-dark">⏳ Due Soon</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">📆 Due: {{ task.due_date }}</span>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-muted">No tasks in Review.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+
+        <div class="col-md-3">
             <div class="card">
                 <div class="card-header bg-success text-white">
                     <strong>Done</strong>

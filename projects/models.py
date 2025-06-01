@@ -20,10 +20,10 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_projects')
     created_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField(blank=True, null=True)
    
     def __str__(self):
         return self.name
-
 
 
 class Task(models.Model):
@@ -170,7 +170,6 @@ class ChatMessage(models.Model):
         return f"{self.sender.get_full_name()} – {self.timestamp.strftime('%H:%M')}"
 
 
-
 class TeamMember(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=255)
@@ -178,7 +177,6 @@ class TeamMember(models.Model):
    
     def __str__(self):
         return self.full_name or self.user.get_full_name()
-
 
 class Assignment(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='assignments')

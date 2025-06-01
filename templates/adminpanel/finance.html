@@ -25,6 +25,10 @@
             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCostCentreModal">
                 ➕ Add Cost Centre
             </button>
+            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addExpenditureModal">
+                ➕ Add Expenditure
+            </button>
+
         </div>
         <div class="card-body table-responsive">
             <table class="table table-bordered" id="costCentresTable">
@@ -44,7 +48,18 @@
                             <td>R {{ cc.total_received|floatformat:2 }}</td>
                             <td>R {{ cc.total_spent|floatformat:2 }}</td>
                             <td>R {{ cc.total_remaining|floatformat:2 }}</td>
-                            <td><button class="btn btn-sm btn-danger" disabled>Delete</button></td>
+                            <td class="d-flex gap-2">
+                                <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editCostCentreModal{{ cc.id }}">
+                                    Edit
+                                </button>
+
+                                <form method="POST" action="{% url 'delete_cost_centre' cc.id %}" onsubmit="return confirm('Are you sure you want to delete this cost centre?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+
+
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -57,7 +72,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Monthly Expenditure Tracker</h5>
             <select id="costCentreDropdown" class="form-select w-auto">
-                <option selected disabled>Select Cost Centre</option>
+                <option value="">Show All</option>
                 {% for cc in cost_centres %}
                     <option value="{{ cc.id }}">{{ cc.name }}</option>
                 {% endfor %}
@@ -80,14 +95,73 @@
                         <th>Closing Balance</th>
                         <th>Oracle Balance</th>
                         <th>Funds Available</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Dynamic Expenditures will load here -->
-                </tbody>
+                <tbody id="expenditureTableBody">
+    {% for record in all_expenditures %}
+        <tr data-cost-centre="{{ record.cost_centre.id }}">
+            <td>{{ record.month }}</td>
+            <td>{{ record.name }}</td>
+            <td>{% if record.category == 'Salary' %}R {{ record.amount|floatformat:2 }}{% endif %}</td>
+            <td>{% if record.category == 'Bursaries' %}R {{ record.amount|floatformat:2 }}{% endif %}</td>
+            <td>{% if record.category == 'Invoices' %}R {{ record.amount|floatformat:2 }}{% endif %}</td>
+            <td>{% if record.category == 'Fitness' %}R {{ record.amount|floatformat:2 }}{% endif %}</td>
+            <td>{% if record.category == 'Equipment' %}R {{ record.amount|floatformat:2 }}{% endif %}</td>
+            <td>{% if record.category == 'Travel' %}R {{ record.amount|floatformat:2 }}{% endif %}</td>
+            <td>R {{ record.amount|floatformat:2 }}</td>
+            <td>R {{ record.opening_balance|floatformat:2 }}</td>
+            <td>R {{ record.closing_balance|floatformat:2 }}</td>
+            <td>R {{ record.oracle_balance|floatformat:2 }}</td>
+            <td>R {{ record.closing_balance|floatformat:2 }}</td>
+            <td class="d-flex gap-2">
+                <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editExpenditureModal{{ record.id }}">
+                    Edit
+                </button>
+                <form method="POST" action="{% url 'delete_expenditure' record.id %}" onsubmit="return confirm('Are you sure you want to delete this expenditure?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="13" class="text-center">No expenditures recorded yet.</td></tr>
+    {% endfor %}
+</tbody>
+
             </table>
         </div>
     </div>
+
+    <div class="card mt-4 shadow">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Cost Centre Spending Overview</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="costCentreBarChart" style="max-height: 280px;"></canvas>
+    </div>
+</div>
+
+<div class="card mt-4 shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Category Distribution</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="categoryPieChart" style="max-height: 240px;"></canvas>
+    </div>
+</div>
+
+<div class="card mt-4 shadow">
+    <div class="card-header">
+        <h5 class="mb-0">Monthly Spending Trend</h5>
+    </div>
+    <div class="card-body">
+        <canvas id="monthlyLineChart" style="max-height: 300px;"></canvas>
+    </div>
+</div>
+
+
+
 
 </div>
 
@@ -95,7 +169,7 @@
 <div class="modal fade" id="addCostCentreModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="addCostCentreForm" method="POST" action="{% url 'add_cost_centre' %}">
+            <form id="addCostCentreForm" method="POST" data-url="{% url 'add_cost_centre' %}">
                 {% csrf_token %}
                 <div class="modal-header">
                     <h5 class="modal-title">Add New Cost Centre</h5>
@@ -119,8 +193,365 @@
     </div>
 </div>
 
-<!-- Bootstrap and Finance JS -->
+<!-- Add Expenditure Modal -->
+<div class="modal fade" id="addExpenditureModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="/adminpanel/finance/add-expenditure/">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Add Monthly Expenditure</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Cost Centre</label>
+            <select name="cost_centre_id" class="form-select" required>
+              {% for cc in cost_centres %}
+              <option value="{{ cc.id }}">{{ cc.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <input type="text" name="month" class="form-control" placeholder="Month (e.g. June 2025)" required>
+          </div>
+          <div class="mb-3">
+            <input type="text" name="name" class="form-control" placeholder="Name & Surname" required>
+          </div>
+          <div class="mb-3">
+            <select name="category" class="form-select" required>
+              <option disabled selected>Select Category</option>
+              <option value="Salary">Salary</option>
+              <option value="Bursaries">Bursaries</option>
+              <option value="Invoices">Invoices</option>
+              <option value="Fitness">Fitness</option>
+              <option value="Equipment">Equipment/Office Resources</option>
+              <option value="Travel">Travel</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <input type="number" step="0.01" name="amount" class="form-control" placeholder="Amount" required>
+          </div>
+          <div class="mb-3">
+            <input type="number" step="0.01" name="oracle_balance" class="form-control" placeholder="Oracle Balance (optional)" value="0.00">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Add Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Cost Centre Modals -->
+{% for cc in cost_centres %}
+<div class="modal fade" id="editCostCentreModal{{ cc.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'edit_cost_centre' cc.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Cost Centre</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Cost Centre Name</label>
+            <input type="text" name="name" class="form-control" value="{{ cc.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Total Received</label>
+            <input type="number" name="total_received" class="form-control" value="{{ cc.total_received }}" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Edit Expenditure Modals -->
+{% for record in all_expenditures %}
+<div class="modal fade" id="editExpenditureModal{{ record.id }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'edit_expenditure' record.id %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Expenditure</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label>Month</label>
+            <input type="text" name="month" class="form-control" value="{{ record.month }}" required>
+          </div>
+          <div class="mb-3">
+            <label>Name</label>
+            <input type="text" name="name" class="form-control" value="{{ record.name }}" required>
+          </div>
+          <div class="mb-3">
+            <label>Category</label>
+            <select name="category" class="form-select" required>
+              {% for key, label in record.EXPENSE_CATEGORY_CHOICES %}
+                <option value="{{ key }}" {% if record.category == key %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Amount</label>
+            <input type="number" step="0.01" name="amount" class="form-control" value="{{ record.amount }}" required>
+          </div>
+          <div class="mb-3">
+            <label>Oracle Balance</label>
+            <input type="number" step="0.01" name="oracle_balance" class="form-control" value="{{ record.oracle_balance }}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+
+
+
+
+<!-- Bootstrap and Chart -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{% static 'js/finance.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const costCentreDropdown = document.getElementById("costCentreDropdown");
+    const addCostCentreForm = document.getElementById("addCostCentreForm");
+    const expenditureTable = document.querySelector("#expenditureTable tbody");
+
+    // ✅ Corrected AJAX Form Submission for Cost Centre
+    addCostCentreForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(addCostCentreForm);
+        const formActionUrl = addCostCentreForm.dataset.url;
+
+        fetch(formActionUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addCostCentreModal'));
+                modal.hide();
+                location.reload();
+            } else {
+                alert('Failed to add cost centre.');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding cost centre:', error);
+        });
+    });
+
+    // ✅ Fetch expenditures for selected cost centre
+    if (costCentreDropdown) {
+        costCentreDropdown.addEventListener("change", function () {
+    const selectedId = this.value;
+    const rows = document.querySelectorAll("#expenditureTableBody tr");
+
+    rows.forEach(row => {
+        const rowCostCentreId = row.getAttribute("data-cost-centre");
+        if (selectedId === "" || rowCostCentreId === selectedId) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+});
+
+    }
+
+    // ✅ Expenditure Table Loader
+    function populateExpenditureTable(expenditures) {
+        expenditureTable.innerHTML = "";
+        if (expenditures.length === 0) {
+            expenditureTable.innerHTML = `<tr><td colspan="13" class="text-center">No expenditures recorded.</td></tr>`;
+            return;
+        }
+
+        console.log("Loaded expenditures:", expenditures);
+
+        expenditures.forEach(record => {
+            const categories = {
+                'Salary': '',
+                'Bursaries': '',
+                'Invoices': '',
+                'Fitness': '',
+                'Equipment/Office Resources': '',
+                'Travel': ''
+            };
+
+            categories[record.category] = `R ${parseFloat(record.amount).toLocaleString()}`;
+
+            expenditureTable.innerHTML += `
+                <tr>
+                    <td>${record.month}</td>
+                    <td>${record.name}</td>
+                    <td>${categories['Salary']}</td>
+                    <td>${categories['Bursaries']}</td>
+                    <td>${categories['Invoices']}</td>
+                    <td>${categories['Fitness']}</td>
+                    <td>${categories['Equipment/Office Resources']}</td>
+                    <td>${categories['Travel']}</td>
+                    <td>R ${parseFloat(record.amount).toLocaleString()}</td>
+                    <td>R ${parseFloat(record.opening_balance).toLocaleString()}</td>
+                    <td>R ${parseFloat(record.closing_balance).toLocaleString()}</td>
+                    <td>R ${parseFloat(record.oracle_balance).toLocaleString()}</td>
+                    <td>R ${parseFloat(record.closing_balance).toLocaleString()}</td>
+                </tr>
+            `;
+        });
+    }
+});
+
+    const costCentreLabels = [
+        {% for cc in cost_centres %}
+            "{{ cc.name }}",
+        {% endfor %}
+    ];
+
+    const totalSpentData = [
+        {% for cc in cost_centres %}
+            {{ cc.total_spent }},
+        {% endfor %}
+    ];
+
+    const ctx = document.getElementById('costCentreBarChart').getContext('2d');
+
+const barChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: costCentreLabels,
+        datasets: [{
+            label: 'Total Spent (ZAR)',
+            data: totalSpentData,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function (value) {
+                        return 'R ' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+const categoryLabels = [
+        {% for c in category_totals %}
+            "{{ c.category }}",
+        {% endfor %}
+    ];
+
+    const categoryData = [
+        {% for c in category_totals %}
+            {{ c.total }},
+        {% endfor %}
+    ];
+
+    const pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+
+const pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+        labels: categoryLabels,
+        datasets: [{
+            data: categoryData,
+            backgroundColor: [
+                '#FF6384', '#36A2EB', '#FFCE56', '#9CCC65', '#FF7043', '#9575CD'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        const val = context.raw;
+                        return `${context.label}: R ${val.toLocaleString()}`;
+                    }
+                }
+            }
+        }
+    }
+});
+
+    const monthlyLabels = [
+        {% for m in monthly_totals %}
+            "{{ m.month }}",
+        {% endfor %}
+    ];
+
+    const monthlyData = [
+        {% for m in monthly_totals %}
+            {{ m.total }},
+        {% endfor %}
+    ];
+
+    const lineCtx = document.getElementById('monthlyLineChart').getContext('2d');
+
+const lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+        labels: monthlyLabels,
+        datasets: [{
+            label: 'Monthly Expenditure (ZAR)',
+            data: monthlyData,
+            fill: true,
+            borderColor: '#42a5f5',
+            tension: 0.4,
+            backgroundColor: 'rgba(66, 165, 245, 0.1)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function (val) {
+                        return 'R ' + val.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+
+
+
+</script>
 
 {% endblock %}

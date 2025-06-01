@@ -67,9 +67,10 @@ class ChatForm(forms.ModelForm):
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'project_type']
+        fields = ['name', 'description', 'project_type', 'due_date']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
 class AssignmentForm(forms.ModelForm):

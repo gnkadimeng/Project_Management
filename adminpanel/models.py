@@ -3,6 +3,7 @@ from django.db import models
 from django.apps import apps
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from decimal import Decimal
 
 
 class CostCentre(models.Model):
@@ -36,6 +37,18 @@ class Expenditure(models.Model):
     opening_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     closing_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     oracle_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+
+    def save(self, *args, **kwargs):
+        self.amount = Decimal(self.amount)
+        self.opening_balance = Decimal(self.opening_balance)
+        self.closing_balance = self.opening_balance - self.amount
+        super().save(*args, **kwargs)
+
+        # Update CostCentre total_spent
+        total = Expenditure.objects.filter(cost_centre=self.cost_centre).aggregate(total=models.Sum('amount'))['total'] or 0
+        self.cost_centre.total_spent = total
+        self.cost_centre.save()
+
 
     def __str__(self):
         return f"{self.name} ({self.category}) - {self.month}"

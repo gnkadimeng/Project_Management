@@ -13,6 +13,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 from django.contrib.auth import get_user_model
+from manager.models import LearningContent, Template
+from django.db.models import Q
+
 
 
 # @login_required
@@ -87,6 +90,7 @@ def staff_kanban(request):
     tasks = Task.objects.filter(assigned_to=request.user)
     todo_tasks = tasks.filter(status='To Do')
     in_progress_tasks = tasks.filter(status='In Progress')
+    review_tasks = tasks.filter(status='Review')
     done_tasks = tasks.filter(status='Done')
 
     assignments = Assignment.objects.filter(team_member=team_member) if team_member else []
@@ -95,6 +99,7 @@ def staff_kanban(request):
         'assignments': assignments,
         'todo_tasks': todo_tasks,
         'in_progress_tasks': in_progress_tasks,
+        'review_tasks': review_tasks,
         'done_tasks': done_tasks,
     }
     return render(request, 'projects/staff_kanban.html', context)
@@ -176,16 +181,6 @@ def update_task_status(request, task_id):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-
-
-@login_required
-def journals_view(request):
-    return render(request, 'projects/journals.html')
-
-@login_required
-def books_view(request):
-    return render(request, 'projects/books.html')
-
 @login_required
 def projects_review(request):
     return render(request, 'projects/projects_review.html')
@@ -199,14 +194,6 @@ def ganttchart(request):
 
     return render(request, 'projects/ganttchart.html', {'tasks': tasks})
 
-
-@login_required
-def elearning(request):
-    return render(request, 'projects/elearning.html')
-
-@login_required
-def templates(request):
-    return render(request, 'projects/templates.html')
 
 def is_student(user):
     return user.role == 'student'
@@ -445,3 +432,47 @@ def team_dashboard(request):
 
 
 
+@login_required
+def staff_elearning(request):
+    resources = LearningContent.objects.all().order_by('-created_at')
+    resource_types = LearningContent.objects.values_list('type', flat=True).distinct()
+
+    selected_type = request.GET.get('type', 'All')
+    search_query = request.GET.get('search', '').strip()
+
+    if selected_type.lower() != "all":
+        resources = resources.filter(type__icontains=selected_type)
+
+    if search_query:
+        resources = resources.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
+
+    return render(request, 'projects/elearning.html', {
+        'resources': resources,
+        'resource_types': resource_types,
+        'selected_type': selected_type,
+        'search_query': search_query,
+    })
+
+
+@login_required
+def staff_templates(request):
+    templates = Template.objects.all()
+    search_query = request.GET.get('search', '').strip()
+
+    if search_query:
+        templates = templates.filter(title__icontains=search_query)
+
+    template_categories = {}
+    for t in templates:
+        category = t.category or "Uncategorized"
+        if category not in template_categories:
+            template_categories[category] = []
+        template_categories[category].append(t)
+
+    return render(request, 'projects/templates.html', {
+        'template_categories': template_categories,
+        'search_query': search_query,
+    })

@@ -10,174 +10,141 @@
             <!-- Welcome Box -->
             <div class="welcome-box">
                 <h3>Learning Resources Hub</h3>
-                <p class="text-muted">Discover valuable learning materials</p>
-                
+                <p class="text-muted">Discover valuable learning materials</p>  
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
-                <div class="d-flex">
-                    <div class="input-group" style="width: 200px;">
-                        <span class="input-group-text" style="background-color: var(--light-orange); color: white;"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control search-input" placeholder="Search resources...">
-                    </div>
+            <!-- {% if user.role == 'manager' %}
+                Button to trigger modal
+                <div class="text-end mb-3">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add Learning Resource
+                    </button>
                 </div>
+                {% endif %} -->
+
+
+            <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+               <form method="get" action="{% url 'staff_elearning' %}" class="d-flex">
+                    {% if selected_type and selected_type != "All" %}
+                        <input type="hidden" name="type" value="{{ selected_type }}">
+                    {% endif %}
+                    <div class="input-group" style="width: 250px;">
+                        <span class="input-group-text" style="background-color: var(--light-orange); color: white;"><i class="bi bi-search"></i></span>
+                        <input type="text" name="search" value="{{ search_query }}" class="form-control search-input" placeholder="Search resources...">
+                    </div>
+                </form>
             </div>
 
             <!-- Filter Chips -->
             <div class="mb-3">
                 <h6 class="mb-2" style="color: var(--purple);">Filter by type:</h6>
                 <div>
-                    <span class="filter-chip active">All</span>
-                    <span class="filter-chip">Courses</span>
-                    <span class="filter-chip">Videos</span>
-                    <span class="filter-chip">Articles</span>
-                    <span class="filter-chip">Books</span>
-                    <span class="filter-chip">Tutorials</span>
+                    <a href="{% url 'staff_elearning' %}?type=All" class="filter-chip {% if selected_type == 'All' %}active{% endif %}">All</a>
+
+                {% for rtype in resource_types %}
+                    <a href="{% url 'staff_elearning' %}?type={{ rtype }}" class="filter-chip {% if selected_type == rtype %}active{% endif %}">{{ rtype }}</a>
+                {% endfor %}
+
+
                 </div>
             </div>
 
+            {% if search_query %}
+                <p class="text-muted">Showing results for "<strong>{{ search_query }}</strong>"{% if selected_type and selected_type != "All" %} in {{ selected_type }}{% endif %}</p>
+            {% endif %}
+
+
             <!-- Resources List -->
             <div class="resource-list-container">
+                <p style="color: red;">Resources count: {{ resources|length }}</p>
+                <p>Filter: {{ selected_type }} | Search: {{ search_query }}</p>
+                <p>Total Matched: {{ resources|length }}</p>
+
+
                 <ul class="resource-list">
-                    <!-- Resource 1 -->
+                    {% for resource in resources %}
                     <li class="resource-item">
-                        <div class="resource-icon-small resource-icon-orange">
-                            <i class="bi bi-code-slash"></i>
+                        <div class="resource-icon-small {% cycle 'resource-icon-orange' 'resource-icon-purple' %}">
+                            <i class="bi bi-book"></i> <!-- You can customize icon logic later -->
                         </div>
                         <div class="resource-info">
-                            <div class="resource-title">Python for Beginners</div>
+                            <div class="resource-title">{{ resource.title }}</div>
                             <div class="resource-meta">
-                                <span class="resource-type">Course</span>
+                                <span class="resource-type">{{ resource.type }}</span>
                                 <span class="resource-platform">
-                                    <img src="https://logo.clearbit.com/coursera.org" class="platform-icon-small" alt="Coursera">
-                                    Coursera
+                                    <img src="{{ resource.platform_logo }}" class="platform-icon-small" alt="{{ resource.platform }}">
+                                    {{ resource.platform }}
                                 </span>
-                                <span>Comprehensive introduction to Python programming</span>
+                                <span>{{ resource.description }}</span>
                             </div>
                         </div>
                         <div class="resource-action">
-                            <a href="https://www.coursera.org/learn/python" target="_blank" class="action-btn-small">
-                                <i class="bi bi-box-arrow-up-right"></i> Visit
+                            <a href="{{ resource.link }}" target="_blank" class="action-btn-small">
+                                <i class="bi {% if resource.type|lower == 'video' or resource.type|lower == 'video series' %}bi-file-earmark-play{% elif resource.type|lower == 'tutorial' %}bi-file-earmark-code{% elif resource.type|lower == 'book' %}bi-book{% else %}bi-code-slash{% endif %}"></i> Visit
                             </a>
                         </div>
                     </li>
-
-                    <!-- Resource 2 -->
-                    <li class="resource-item">
-                        <div class="resource-icon-small resource-icon-purple">
-                            <i class="bi bi-file-earmark-play"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-title">React Masterclass</div>
-                            <div class="resource-meta">
-                                <span class="resource-type">Video Series</span>
-                                <span class="resource-platform">
-                                    <img src="https://logo.clearbit.com/youtube.com" class="platform-icon-small" alt="YouTube">
-                                    YouTube
-                                </span>
-                                <span>Complete guide to building applications with React</span>
-                            </div>
-                        </div>
-                        <div class="resource-action">
-                            <a href="https://www.youtube.com/playlist?list=PL4cUxeGkcC9gZD-Tvwfod2gaISzkRi3JX" target="_blank" class="action-btn-small">
-                                <i class="bi bi-box-arrow-up-right"></i> Watch
-                            </a>
-                        </div>
-                    </li>
-
-                    <!-- Resource 3 -->
-                    <li class="resource-item">
-                        <div class="resource-icon-small resource-icon-orange">
-                            <i class="bi bi-book"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-title">Data Science Handbook</div>
-                            <div class="resource-meta">
-                                <span class="resource-type">Book</span>
-                                <span class="resource-platform">
-                                    <img src="https://logo.clearbit.com/oceanofpdf.com" class="platform-icon-small" alt="PDF">
-                                    Free PDF
-                                </span>
-                                <span>Field guide to the data science workflow</span>
-                            </div>
-                        </div>
-                        <div class="resource-action">
-                            <a href="https://www.data-science-handbook.com" target="_blank" class="action-btn-small">
-                                <i class="bi bi-box-arrow-up-right"></i> Download
-                            </a>
-                        </div>
-                    </li>
-
-                    <!-- Resource 4 -->
-                    <li class="resource-item">
-                        <div class="resource-icon-small resource-icon-purple">
-                            <i class="bi bi-palette"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-title">UI/UX Design Fundamentals</div>
-                            <div class="resource-meta">
-                                <span class="resource-type">Course</span>
-                                <span class="resource-platform">
-                                    <img src="https://logo.clearbit.com/udemy.com" class="platform-icon-small" alt="Udemy">
-                                    Udemy
-                                </span>
-                                <span>Principles of user interface and experience design</span>
-                            </div>
-                        </div>
-                        <div class="resource-action">
-                            <a href="https://www.udemy.com/course/ui-ux-design-fundamentals" target="_blank" class="action-btn-small">
-                                <i class="bi bi-box-arrow-up-right"></i> Enroll
-                            </a>
-                        </div>
-                    </li>
-
-                    <!-- Resource 5 -->
-                    <li class="resource-item">
-                        <div class="resource-icon-small resource-icon-orange">
-                            <i class="bi bi-file-earmark-code"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-title">Modern JavaScript Guide</div>
-                            <div class="resource-meta">
-                                <span class="resource-type">Tutorial</span>
-                                <span class="resource-platform">
-                                    <img src="https://logo.clearbit.com/javascript.info" class="platform-icon-small" alt="JavaScript.info">
-                                    javascript.info
-                                </span>
-                                <span>Comprehensive tutorial covering ES6+ features</span>
-                            </div>
-                        </div>
-                        <div class="resource-action">
-                            <a href="https://javascript.info" target="_blank" class="action-btn-small">
-                                <i class="bi bi-box-arrow-up-right"></i> Read
-                            </a>
-                        </div>
-                    </li>
-
-                    <!-- Resource 6 -->
-                    <li class="resource-item">
-                        <div class="resource-icon-small resource-icon-purple">
-                            <i class="bi bi-cloud"></i>
-                        </div>
-                        <div class="resource-info">
-                            <div class="resource-title">AWS Crash Course</div>
-                            <div class="resource-meta">
-                                <span class="resource-type">Video</span>
-                                <span class="resource-platform">
-                                    <img src="https://logo.clearbit.com/freecodecamp.org" class="platform-icon-small" alt="freeCodeCamp">
-                                    freeCodeCamp
-                                </span>
-                                <span>Quick introduction to Amazon Web Services</span>
-                            </div>
-                        </div>
-                        <div class="resource-action">
-                            <a href="https://www.freecodecamp.org/news/aws-crash-course" target="_blank" class="action-btn-small">
-                                <i class="bi bi-box-arrow-up-right"></i> Watch
-                            </a>
-                        </div>
-                    </li>
+                    {% empty %}
+                    <li>No learning resources found for your filter or search.</li>
+                    {% endfor %}
                 </ul>
+
             </div>
+
+            <!-- Add Resource Modal -->
+<div class="modal fade" id="addResourceModal" tabindex="-1" aria-labelledby="addResourceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'add_learning_resource' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="addResourceModalLabel">Add New Learning Resource</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Title</label>
+              <input type="text" class="form-control" name="title" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Resource Type</label>
+              <select class="form-select" name="type" required>
+                <option value="">Choose...</option>
+                <option>Course</option>
+                <option>Video</option>
+                <option>Video Series</option>
+                <option>Tutorial</option>
+                <option>Book</option>
+                <option>Article</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Platform</label>
+              <input type="text" class="form-control" name="platform" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Platform Logo URL</label>
+              <input type="url" class="form-control" name="platform_logo" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" name="description" rows="2" required></textarea>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Resource Link</label>
+              <input type="url" class="form-control" name="link" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Save Resource</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
         </div>
     </div>
 

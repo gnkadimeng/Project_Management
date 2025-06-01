@@ -2,10 +2,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import CostCentre, Expenditure, SupervisorProfile, SupervisorFeedback
 from django.http import JsonResponse
-from .models import Project
-from projects.models import Submission, StudentProfile, Meeting, ChatMessage
+from projects.models import Project, Submission, StudentProfile, Meeting, ChatMessage, Task, Assignment
 from django.contrib.auth import get_user_model
 from .forms import SupervisorFeedbackForm
+from django.http import JsonResponse, HttpResponseBadRequest
+from decimal import Decimal, InvalidOperation
+from django.db.models import Sum
+from django.db.models.functions import TruncMonth
+from django.utils.dateparse import parse_date
 
 
 @login_required
@@ -32,18 +36,56 @@ def admin_ganttchart(request):
 @login_required
 def overview(request):
     User = get_user_model()
-    projects = Project.objects.all()
     users = User.objects.all()
+
+    projects = Project.objects.prefetch_related('tasks', 'assignments__team_member__user').select_related('created_by')
+
+    for project in projects:
+        tasks = project.tasks.all()
+        total = tasks.count()
+        completed = tasks.filter(status='done').count()
+        project.progress = int((completed / total) * 100) if total else 0
+
+        # Use first assigned team member if available
+        if project.assignments.exists():
+            assignment = project.assignments.first()
+            project.assigned_user = assignment.team_member.user
+        else:
+            project.assigned_user = project.created_by
+
     return render(request, 'adminpanel/overview.html', {
         'projects': projects,
         'users': users
     })
 
+
 @login_required
 def finance(request):
     cost_centres = CostCentre.objects.all()
-    return render(request, 'adminpanel/finance.html', {'cost_centres': cost_centres})
+    all_expenditures = Expenditure.objects.select_related('cost_centre').all()
 
+    # Total spent per category
+    category_totals = (
+        Expenditure.objects.values('category')
+        .annotate(total=Sum('amount'))
+        .order_by('category')
+    )
+
+    monthly_totals = (
+        Expenditure.objects
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+
+    return render(request, 'adminpanel/finance.html', {
+        'cost_centres': cost_centres,
+        'all_expenditures': all_expenditures,
+        'category_totals': category_totals,
+        'monthly_totals': monthly_totals,
+    })
+
+@login_required
 def add_cost_centre(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -54,9 +96,38 @@ def add_cost_centre(request):
                 total_received=received,
                 total_spent=0
             )
+            return JsonResponse({'message': 'Cost Centre added successfully'})
+        return HttpResponseBadRequest('Missing fields')
+    return HttpResponseBadRequest('Invalid request')
+    
+@login_required
+def add_expenditure(request):
+    if request.method == 'POST':
+        cost_centre_id = request.POST.get('cost_centre_id')
+        month = request.POST.get('month')
+        name = request.POST.get('name')
+        category = request.POST.get('category')
+
+        # Safely convert numeric fields
+        try:
+            amount = Decimal(request.POST.get('amount', '0') or '0.00')
+            oracle = Decimal(request.POST.get('oracle_balance', '0') or '0.00')
+        except InvalidOperation:
+            return HttpResponseBadRequest("Invalid number format")
+
+        cost_centre = CostCentre.objects.get(id=cost_centre_id)
+        Expenditure.objects.create(
+            cost_centre=cost_centre,
+            month=month,
+            name=name,
+            category=category,
+            amount=amount,
+            oracle_balance=oracle
+        )
         return redirect('finance')
 
-    
+
+@login_required
 def get_expenditures(request, cost_centre_id):
     cost_centre = CostCentre.objects.get(id=cost_centre_id)
     expenditures = cost_centre.expenditures.all()
@@ -72,6 +143,46 @@ def get_expenditures(request, cost_centre_id):
             'oracle_balance': str(exp.oracle_balance),
         })
     return JsonResponse({'expenditures': data})
+
+@login_required
+def delete_cost_centre(request, pk):
+    cost_centre = get_object_or_404(CostCentre, pk=pk)
+    if request.method == 'POST':
+        cost_centre.delete()
+        return redirect('finance')
+    return render(request, 'adminpanel/confirm_delete.html', {'cost_centre': cost_centre})
+
+@login_required
+def edit_cost_centre(request, pk):
+    cost_centre = get_object_or_404(CostCentre, pk=pk)
+    if request.method == 'POST':
+        cost_centre.name = request.POST.get('name')
+        cost_centre.total_received = request.POST.get('total_received')
+        cost_centre.save()
+        return redirect('finance')
+    return redirect('finance')  # fallback if GET request
+
+@login_required
+def edit_expenditure(request, pk):
+    expenditure = get_object_or_404(Expenditure, pk=pk)
+    if request.method == 'POST':
+        expenditure.month = request.POST.get('month')
+        expenditure.name = request.POST.get('name')
+        expenditure.category = request.POST.get('category')
+        expenditure.amount = Decimal(request.POST.get('amount', '0'))
+        expenditure.oracle_balance = Decimal(request.POST.get('oracle_balance', '0'))
+        expenditure.save()
+        return redirect('finance')
+    return redirect('finance')
+
+@login_required
+def delete_expenditure(request, pk):
+    expenditure = get_object_or_404(Expenditure, pk=pk)
+    if request.method == 'POST':
+        expenditure.delete()
+        return redirect('finance')
+    return redirect('finance')
+
 
 
 

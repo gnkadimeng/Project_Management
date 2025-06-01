@@ -1,6 +1,7 @@
 # views.py in manager app
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from projects.models import Project, Task
 from django.http import JsonResponse
 from django.contrib import messages
@@ -37,13 +38,13 @@ def manager_journals(request):
 def manager_ganttchart(request):
     return render(request, 'manager/manager_ganttchart.html')
 
-@login_required
-def manager_elearning(request):
-    return render(request, 'manager/manager_elearning.html')
+# @login_required
+# def manager_elearning(request):
+#     return render(request, 'manager/manager_elearning.html')
 
-@login_required
-def manager_templates(request):
-    return render(request, 'manager/manager_templates.html')
+# @login_required
+# def manager_templates(request):
+#     return render(request, 'manager/manager_templates.html')
 
 # @login_required
 # def manager_kanban(request):
@@ -56,48 +57,50 @@ def manager_templates(request):
 
 @login_required
 def manager_kanban(request):
-    statuses = ['To Do', 'In Progress', 'Review', 'Complete']
+    status_labels = {
+    'todo': 'To Do',
+    'in_progress': 'In Progress',
+    'review': 'Review',
+    'done': 'Done',
+    }
+    statuses = list(status_labels.keys())
+
     priorities = ['Low', 'Medium', 'High']
     eligible_users = CustomUser.objects.filter(role__in=['staff', 'manager'])
+    all_projects = Project.objects.all()
 
     # Group tasks by project, then by status
     projects_tasks = {}
-    all_projects = Project.objects.all()
-
     for project in all_projects:
-        tasks = Task.objects.filter(project=project)
+        tasks = Task.objects.filter(project=project).distinct()
         status_dict = defaultdict(list)
         for task in tasks:
             status_dict[task.status].append(task)
         projects_tasks[project] = status_dict
 
     context = {
-        'all_projects': all_projects,  # used in the HTML
-        'projects_tasks': projects_tasks,  # used in the HTML
         'statuses': statuses,
+        'status_labels': status_labels,
         'priorities': priorities,
         'eligible_users': eligible_users,
+        'projects_tasks': projects_tasks,  # used in the HTML
+        'all_projects': all_projects,  # used in the HTML
         'today': now().date(),
     }
     return render(request, 'manager/manager_kanban.html', context)
 
-@csrf_exempt
-@login_required
-def update_task_status(request, task_id):
-    if request.method == "POST":
-        task = get_object_or_404(Task, id=task_id, created_by=request.user)
-        new_status = request.POST.get('status')
-        if new_status in ['todo', 'in-progress', 'review', 'complete']:
-            task.status = new_status
-            task.save()
-            return JsonResponse({'success': True})
-    return JsonResponse({'success': False}, status=400)
+# @csrf_exempt
+# @login_required
+# def update_task_status(request, task_id):
+#     if request.method == "POST":
+#         task = get_object_or_404(Task, id=task_id, created_by=request.user)
+#         new_status = request.POST.get('status')
+#         if new_status in ['todo', 'in-progress', 'review', 'complete']:
+#             task.status = new_status
+#             task.save()
+#             return JsonResponse({'success': True})
+#     return JsonResponse({'success': False}, status=400)
 
-
-
-@login_required
-def assign(request):
-    return render(request, 'manager/assign.html')
 
 
 @login_required
@@ -239,7 +242,9 @@ def add_task(request):
             priority=priority,
             due_date=due_date,
             status=status,
-            assigned_to=request.user,  # you can customize this later
+            assigned_to=assigned_user,
+            project=Project.objects.get(id=request.POST.get('project')),
+            created_by=request.user,
         )
     return redirect('manager_kanban')
 
@@ -260,11 +265,21 @@ def edit_task(request, task_id):
 @login_required
 def update_task_status(request, task_id):
     if request.method == 'POST':
-        task = get_object_or_404(Task, id=task_id)
-        data = json.loads(request.body)
-        task.status = data.get('status')
-        task.save()
-        return JsonResponse({'success': True})
+        try:
+            task = get_object_or_404(Task, id=task_id)
+            data = json.loads(request.body)
+            new_status = data.get('status')
+
+            if new_status in ['todo', 'in_progress', 'review', 'done']:
+                task.status = new_status
+                task.save()
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'error': 'Invalid status'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
     
 @login_required
 def add_learning_resource(request):
