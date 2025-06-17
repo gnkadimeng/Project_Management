@@ -37,22 +37,8 @@ def app_kanban(request):
 def manager_ganttchart(request):
     return render(request, 'manager/manager_ganttchart.html')
 
-# @login_required
-# def manager_elearning(request):
-#     return render(request, 'manager/manager_elearning.html')
 
-# @login_required
-# def manager_templates(request):
-#     return render(request, 'manager/manager_templates.html')
-
-# @login_required
-# def manager_kanban(request):
-#     tasks = Task.objects.filter(created_by=request.user)
-#     context = {
-#         'tasks': tasks,
-#     }
-#     return render(request, 'manager/manager_kanban.html', context)
-
+TASK_TYPES = ['UX/UI', 'Architecture', 'Frontend', 'Backend', 'Testing', 'Deployment', 'Paper', 'Book', 'Other']
 
 @login_required
 def manager_kanban(request):
@@ -75,95 +61,13 @@ def manager_kanban(request):
         'statuses': statuses,
         'status_labels': status_labels,
         'priorities': priorities,
-        'tasks_by_status': dict(tasks_by_status),
+        'grouped_tasks': dict(tasks_by_status),
+        'task_types': TASK_TYPES,
+        'projects': Project.objects.all(),
         'today': now().date(),
     }
     return render(request, 'manager/manager_kanban.html', context)
 
-# @csrf_exempt
-# @login_required
-# def update_task_status(request, task_id):
-#     if request.method == "POST":
-#         task = get_object_or_404(Task, id=task_id, created_by=request.user)
-#         new_status = request.POST.get('status')
-#         if new_status in ['todo', 'in-progress', 'review', 'complete']:
-#             task.status = new_status
-#             task.save()
-#             return JsonResponse({'success': True})
-#     return JsonResponse({'success': False}, status=400)
-
-
-
-# @login_required
-# def create_paper_project(request):
-#     if request.method == 'POST':
-#         title = request.POST.get('title')
-#         type = request.POST.get('type', 'paper')
-#         status = request.POST.get('status')
-#         version = request.POST.get('version')
-#         abstract = request.POST.get('abstract')
-#         submission_date = request.POST.get('submission_date')
-#         file = request.FILES.get('file')
-
-#         project = Project.objects.create(
-#             title=title,
-#             type=type,
-#             status=status,
-#             version=version,
-#             abstract=abstract,
-#             file=file,
-#             submission_date=submission_date,
-#             created_by=request.user,
-#         )
-#         return JsonResponse({'message': 'Paper project created', 'project_id': project.id})
-
-
-# @login_required
-# def add_paper_project(request):
-#     if request.method == 'POST':
-#         title = request.POST.get('paperTitle')
-#         paper_type = request.POST.get('paperType')  # 'internal' or 'external'
-#         status = request.POST.get('paperStatus')    # e.g., 'draft', 'submitted'
-#         version = request.POST.get('currentVersion')
-#         lead_author = request.POST.get('leadAuthor')
-#         co_authors = request.POST.get('coAuthors')
-#         target_journal = request.POST.get('targetJournal')
-#         submission_date = request.POST.get('submissionDate')
-#         abstract = request.POST.get('paperAbstract')
-#         file = request.FILES.get('paperFile')
-
-#         try:
-#             submission_date = datetime.strptime(submission_date, '%Y-%m-%d') if submission_date else None
-
-#             project = Project.objects.create(
-#                 title=title,
-#                 description=abstract,
-#                 type='paper',
-#                 status=status,
-#                 version=version,
-#                 created_by=request.user,
-#                 target_journal=target_journal,
-#                 lead_author=lead_author,
-#                 co_authors=co_authors,
-#                 submission_date=submission_date,
-#                 manuscript=file,
-#                 paper_type=paper_type
-#             )
-#             messages.success(request, 'Paper project created successfully.')
-#             return JsonResponse({'success': True})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'error': str(e)})
-
-#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
-
-# @login_required
-# def paper_tracking(request):
-#     internal_papers = Project.objects.filter(type='paper', paper_type='internal')
-#     external_papers = Project.objects.filter(type='paper', paper_type='external')
-#     return render(request, 'manager/manager_journals.html', {
-#         'internal_papers': internal_papers,
-#         'external_papers': external_papers,
-#     })
 
 @login_required
 def assign_projects_view(request):
@@ -186,7 +90,7 @@ def assign_projects_view(request):
         'assignments': assignments,
         'assignment_form': assignment_form,
         'eligible_users': eligible_users,
-        'project_form': project_form,  # ✅ Add this to context
+        'project_form': project_form,  
     }
     return render(request, 'manager/assign.html', context)
 
@@ -245,7 +149,6 @@ def remove_assignment(request, assignment_id):
         return redirect('assign_projects', project_id=assignment.project.id)
 
 
-
 @login_required
 def add_task(request):
     if request.method == 'POST':
@@ -253,17 +156,20 @@ def add_task(request):
         priority = request.POST.get('priority')
         due_date = request.POST.get('due_date') or None
         status = request.POST.get('status')
-
+        task_type = request.POST.get('task_type')
+        project_id = request.POST.get('project')
+        project = Project.objects.filter(id=project_id).first() if project_id else None
 
         Task.objects.create(
             title=title,
             priority=priority,
             due_date=due_date,
             status=status,
+            task_type=task_type,
             created_by=request.user,
+            project=project,
         )
     return redirect('manager_kanban')
-
 
 @login_required
 def edit_task(request, task_id):
@@ -273,9 +179,11 @@ def edit_task(request, task_id):
         task.title = request.POST.get('title')
         task.priority = request.POST.get('priority')
         task.due_date = request.POST.get('due_date') or None
+        task.task_type = request.POST.get('task_type')
+        project_id = request.POST.get('project')
+        task.project = Project.objects.filter(id=project_id).first() if project_id else None
         task.save()
         return redirect('manager_kanban')
-
 
 @csrf_exempt
 @login_required
@@ -295,6 +203,14 @@ def update_task_status(request, task_id):
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+
+@login_required
+def manager_delete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id, created_by=request.user)
+    if request.method == 'POST':
+        task.delete()
+    return redirect('manager_kanban')
 
     
 @login_required
@@ -584,26 +500,38 @@ def delete_book(request, book_id):
     return JsonResponse({'success': False, 'message': 'Invalid method'})
 
 
+@csrf_exempt
 def get_chapters(request, book_id):
-    chapters = Chapter.objects.filter(book_id=book_id).values(
-        'chapter_number', 'title', 'author', 'editor', 'status', 'last_updated'
-    )
-    return JsonResponse({'chapters': list(chapters)})
-
-
+    chapters = Chapter.objects.filter(book_id=book_id).order_by("chapter_number")
+    chapter_list = [
+        {
+            "id": c.id,
+            "book_id": c.book_id,
+            "chapter_number": c.chapter_number,
+            "title": c.title,
+            "author": c.author,
+            "editor": c.editor,
+            "status": c.status,
+            "last_updated": c.last_updated.strftime("%Y-%m-%d %H:%M")
+        } for c in chapters
+    ]
+    return JsonResponse({"chapters": chapter_list})
 
 @csrf_exempt
 def add_chapter(request, book_id):
     if request.method == "POST":
         data = json.loads(request.body)
+        book = Book.objects.get(id=book_id)
         chapter = Chapter.objects.create(
-            book_id=book_id,
+            book=book,
             chapter_number=data["chapter_number"],
             title=data["title"],
             author=data["author"],
             editor=data.get("editor", ""),
             status=data["status"]
         )
+        print("Chapter created:", chapter.title)
+
         return JsonResponse({"success": True, "id": chapter.id})
     return JsonResponse({"success": False, "error": "Invalid request method"})
 
@@ -623,4 +551,11 @@ def edit_chapter(request, chapter_id):
         except Chapter.DoesNotExist:
             return JsonResponse({"success": False, "error": "Chapter not found"})
     return JsonResponse({"success": False, "error": "Invalid request method"})
+
+@csrf_exempt
+def delete_chapter(request, chapter_id):
+    if request.method == "POST":
+        Chapter.objects.filter(id=chapter_id).delete()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False, "error": "Invalid request"})
 

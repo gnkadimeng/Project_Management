@@ -178,8 +178,6 @@ def delete_expenditure(request, pk):
     return redirect('finance')
 
 
-
-
 @login_required
 def admin_kanban(request):
     return render(request, 'adminpanel/admin_kanban.html')

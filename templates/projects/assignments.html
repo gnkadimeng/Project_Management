@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Assignments{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary: #F26522;
+        --secondary: #e4963c82;
+        --success: #27ae60;
+        --warning: #f39c12;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --text-primary: #2c3e50;
+    }
+
+    body {
+        background-image: url("{% static 'img/2.png' %}");
+        background-size: cover;
+        background-attachment: fixed;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text-primary);
+    }
+
+    .welcome-box {
+        background: rgba(255, 255, 255, 0.9);
+        border-left: 6px solid var(--primary);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 30px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .welcome-box h3 {
+        margin: 0;
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    .welcome-box p {
+        margin-top: 10px;
+        color: #555;
+    }
+
+    .card {
+        border-radius: 10px;
+    }
+
+    .card-header {
+        background-color: var(--primary) !important;
+        color: white !important;
+        font-weight: 600;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+    }
+
+    .alert-info {
+        background-color: #fefefe;
+        border-left: 5px solid var(--primary);
+    }
+
+    @media (max-width: 768px) {
+        .welcome-box {
+            text-align: center;
+        }
+    }
+</style>
+
+<!-- Welcome -->
+<div class="container mt-4">
+    <div class="welcome-box">
+        <h3>Welcome Back, {{ request.user.username }}!</h3>
+        <p>Please see the projects assigned to you.</p>
+    </div>
+
+    <!-- Assignments -->
+    <div>
+        <h4 class="mb-4">📁 My Project Assignments</h4>
+        {% if assignments %}
+            <div class="row">
+                {% for assignment in assignments %}
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header">
+                                {{ assignment.project.name }}
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Role:</strong> {{ assignment.responsibility }}</p>
+                                <p><strong>Type:</strong> {{ assignment.project.get_project_type_display }}</p>
+                                <p><strong>Status:</strong>
+                                    <span class="badge 
+                                        {% if assignment.project.status == 'Active' %} bg-success 
+                                        {% elif assignment.project.status == 'Pending' %} bg-warning text-dark 
+                                        {% else %} bg-secondary 
+                                        {% endif %}">
+                                        {{ assignment.project.status }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">You have no project assignments yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- JavaScript Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

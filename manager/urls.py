@@ -12,11 +12,11 @@ urlpatterns = [
     path('manager_elearning/', views.elearning_page, name='manager_elearning'),
     path('manager_templates/', views.templates_page, name='manager_templates'),
     path('manager_kanban/', views.manager_kanban, name='manager_kanban'),
-    # path('add-paper/', views.add_paper_project, name='add_paper_project'),
-    # path('papers/', views.paper_tracking, name='paper_tracking'),
+    path('add-task/', views.add_task, name='manager_create_task'),
     path('add-task/', views.add_task, name='add_task'),
     path('edit-task/<int:task_id>/', views.edit_task, name='edit_task'),
     path('update-task-status/<int:task_id>/', views.update_task_status, name='update_task_status'),
+    path('delete-task/<int:task_id>/', views.manager_delete_task, name='manager_delete_task'),
     path('assign/', views.assign_projects_view, name='assign_projects'),
     path('create_project/', views.create_project, name='create_project'),
     path('assign/team/<int:project_id>/', views.assign_team_member, name='assign_team_member'),
@@ -32,6 +32,11 @@ urlpatterns = [
     path('add-book/', views.add_book, name='add_book'),
     path('edit-book/<int:book_id>/', views.edit_book, name='edit_book'),
     path('delete-book/<int:book_id>/', views.delete_book, name='delete_book'),
+    path('delete-chapter/<int:chapter_id>/', views.delete_chapter, name='delete_chapter'),
+    path('add-chapter/<int:book_id>/', views.add_chapter, name='add_chapter'),
+    path('edit-chapter/<int:chapter_id>/', views.edit_chapter, name='edit_chapter'),
+    path('get-chapters/<int:book_id>/', views.get_chapters, name='get_chapters'),
+
 
 ]
 

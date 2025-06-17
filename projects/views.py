@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.urls import reverse
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 import json
 from django.contrib.auth import get_user_model
@@ -17,46 +18,11 @@ from manager.models import LearningContent, Template
 from django.db.models import Q
 
 
-
-# @login_required
-# def dashboard(request):
-#     user = request.user
-#     form = TaskForm()
-
-#     if request.method == 'POST':
-#         form = TaskForm(request.POST)
-#         if form.is_valid():
-#             new_task = form.save(commit=False)
-#             new_task.assigned_to = user
-#             new_task.save()
-#             return redirect('dashboard')
-
-#     # Get user's tasks
-#     my_tasks_today = Task.objects.filter(assigned_to=user).order_by('-created_at')
-#     completed = Task.objects.filter(assigned_to=user, status='done').count()
-#     in_progress = Task.objects.filter(assigned_to=user, status='in_progress').count()
-#     total_projects = my_tasks_today.count()
-
-#     context = {
-#         'form': form,
-#         'my_tasks_today': my_tasks_today,
-#         'completed': completed,
-#         'in_progress': in_progress,
-#         'total_projects': total_projects,
-#     }
-
-#     return render(request, 'projects/dashboard.html', context)
-
-
 @login_required
 def dashboard(request):
     form = DailyTaskForm()
     tasks = DailyTask.objects.filter(user=request.user).order_by('-created_at')
     upload_form = FileUploadForm()
-
-    # NEW: Fetch project assignments
-    team_member = TeamMember.objects.filter(user=request.user).first()
-    assignments = Assignment.objects.filter(team_member=team_member) if team_member else []
 
     if request.method == 'POST':
         form = DailyTaskForm(request.POST)
@@ -69,8 +35,17 @@ def dashboard(request):
     return render(request, 'projects/dashboard.html', {
         'form': form,
         'daily_tasks': tasks,
-        'upload_form': upload_form,
-        'assignments': assignments  # Pass to dashboard template
+        'upload_form': upload_form
+    })
+
+
+@login_required
+def assignments(request):
+    team_member = TeamMember.objects.filter(user=request.user).first()
+    assignments = Assignment.objects.filter(team_member=team_member) if team_member else []
+
+    return render(request, 'projects/assignments.html', {
+        'assignments': assignments
     })
 
 
@@ -88,24 +63,24 @@ def delete_task(request, task_id):
     task.delete()
     return redirect('dashboard')
 
+TASK_TYPES = ['UX/UI', 'Architecture', 'Frontend', 'Backend', 'Testing', 'Deployment', 'Paper', 'Book', 'Other']
+
 @login_required
 def staff_kanban(request):
-    tasks = Task.objects.filter(assigned_to=request.user)
-    todo_tasks = tasks.filter(status='To Do')
-    in_progress_tasks = tasks.filter(status='In Progress')
-    review_tasks = tasks.filter(status='Review')
-    done_tasks = tasks.filter(status='Done')
+    tasks = Task.objects.filter(assigned_to=request.user).order_by('-created_at')
 
-
-    context = {
-        'todo_tasks': todo_tasks,
-        'in_progress_tasks': in_progress_tasks,
-        'review_tasks': review_tasks,
-        'done_tasks': done_tasks,
+    # Group tasks by status
+    grouped_tasks = {
+        'todo': tasks.filter(status='todo'),
+        'in_progress': tasks.filter(status='in_progress'),
+        'review': tasks.filter(status='review'),
+        'done': tasks.filter(status='done'),
     }
-    return render(request, 'projects/staff_kanban.html', context)
 
-
+    return render(request, 'projects/staff_kanban.html', {
+        'grouped_tasks': grouped_tasks,
+        'task_types': TASK_TYPES
+    })
 
 @login_required
 def staff_create_task(request):
@@ -115,6 +90,7 @@ def staff_create_task(request):
         task_type = request.POST.get('task_type')
         priority = request.POST.get('priority')
         due_date_str = request.POST.get('due_date')
+        project_name = request.POST.get('project_name', '').strip()
 
         # Convert due_date to a valid date or None
         due_date = None
@@ -124,6 +100,10 @@ def staff_create_task(request):
             except ValueError:
                 due_date = None  # fallback if date is badly formatted
 
+        project = None
+        if project_name:
+            project, _ = Project.objects.get_or_create(name=project_name, defaults={'created_by': request.user})
+
         # Create the task
         Task.objects.create(
             title=title,
@@ -132,54 +112,65 @@ def staff_create_task(request):
             priority=priority,
             due_date=due_date,
             assigned_to=request.user,
-            project=None  # optional: handle this based on your logic
+            created_by=request.user,
+            project=project
         )
     return redirect('staff_kanban')
+
 
 @login_required
 def edit_task(request, task_id):
     task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
 
     if request.method == 'POST':
-        task.title = request.POST.get('title')
+        project_name = request.POST.get('project_name', '').strip()
+        task.title = request.POST.get('title', '').strip()
         task.status = request.POST.get('status')
         task.task_type = request.POST.get('task_type')
         task.priority = request.POST.get('priority')
-        task.due_date = request.POST.get('due_date') or None  # handle empty date field
-        task.save()
-        return redirect('staff_kanban')  # Replace with your actual task board URL name
+        due_date_str = request.POST.get('due_date')
 
-    # If someone tries GET on this view directly
+        # Convert due_date to valid date
+        due_date = None
+        if due_date_str:
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                due_date = None
+
+        if project_name:
+            project, _ = Project.objects.get_or_create(name=project_name, defaults={'created_by': request.user})
+            task.project = project
+
+        task.due_date = due_date
+        task.save()
+
+        return redirect('staff_kanban')
+
     return redirect('staff_kanban')
 
-# @csrf_exempt
-# @login_required
-# def update_task_status(request, task_id):
-#     if request.method == 'POST':
-#         task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
-#         data = json.loads(request.body)
-#         task.status = data.get('status')
-#         task.save()
-#         return JsonResponse({'success': True})
-#     return JsonResponse({'error': 'Invalid method'}, status=400)
-
-
 @csrf_exempt
+@require_POST
+@login_required
 def update_task_status(request, task_id):
-    if request.method == 'POST':
-        try:
-            task = Task.objects.get(id=task_id)
-            data = json.loads(request.body)
-            new_status = data.get("status")
-            if new_status in ["To Do", "In Progress", "Done"]:
-                task.status = new_status
-                task.save()
-                return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"error": "Invalid status"}, status=400)
-        except Task.DoesNotExist:
-            return JsonResponse({"error": "Task not found"}, status=404)
-    return JsonResponse({"error": "Invalid request"}, status=400)
+    try:
+        data = json.loads(request.body)
+        new_status = data.get('status')
+
+        task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
+        task.status = new_status
+        task.save()
+
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+@login_required
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id, assigned_to=request.user)
+    if request.method == "POST":
+        task.delete()
+    return redirect('staff_kanban')  # Adjust redirect URL as needed
 
 
 @login_required
@@ -336,34 +327,6 @@ def send_chat_message(request):
             message.sender = request.user
             message.save()
     return redirect('student_dashboard')
-
-# @login_required
-# def dashboard(request):
-#     # Get all projects created by the current user
-#     projects = Project.objects.filter(created_by=request.user)
-   
-#     # Get filter parameters
-#     project_type = request.GET.get('type', 'all')
-#     status = request.GET.get('status', 'all')
-#     search = request.GET.get('search', '')
-   
-#     # Apply filters
-#     if project_type != 'all':
-#         projects = projects.filter(project_type=project_type)
-#     if status != 'all':
-#         projects = projects.filter(status=status)
-#     if search:
-#         projects = projects.filter(name__icontains=search)
-   
-#     context = {
-#         'projects': projects,
-#         'current_type': project_type,
-#         'current_status': status,
-#         'search_query': search,
-#     }
-#     return render(request, 'projects/dashboard.html', context)
-
-
 
 
 @login_required

@@ -34,6 +34,9 @@ class Task(models.Model):
         ('Backend', 'Backend'),
         ('Testing', 'Testing'),
         ('Deployment', 'Deployment'),
+        ('Paper', 'Paper'),
+        ('Book', 'Book'),
+        ('Other', 'Other'),
     ]
 
     PRIORITY_CHOICES = [
