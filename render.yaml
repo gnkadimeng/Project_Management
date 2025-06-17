@@ -3,7 +3,7 @@ services:
     name: project-management
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn project_manage.wsgi:application"
+    startCommand: "gunicorn project_management.wsgi:application"
     envVars:
       - key: DEBUG
         value: "False"
