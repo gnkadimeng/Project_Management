@@ -21,7 +21,8 @@ class Project(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_projects')
     created_at = models.DateTimeField(auto_now_add=True)
     due_date = models.DateField(blank=True, null=True)
-   
+    assigned_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_projects', null=True, blank=True)
+
     def __str__(self):
         return self.name
 
@@ -53,6 +54,7 @@ class Task(models.Model):
     ]
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+    parent_task = models.ForeignKey('self', null=True, blank=True, related_name='subtasks', on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='assigned_tasks', null=True, blank=True)
     title = models.CharField(max_length=255)
     status = models.CharField(choices=STATUS_CHOICES, default='todo', max_length=20)
@@ -61,6 +63,7 @@ class Task(models.Model):
     due_date = models.DateField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_tasks', null=True, blank=True)
+    progress = models.IntegerField(default=0, help_text="Progress in percentage (0-100)")
     
     def __str__(self):
         return self.title
@@ -193,3 +196,9 @@ class Assignment(models.Model):
     def __str__(self):
         return f"{self.team_member} on {self.project}"
 
+class ProgressUpdate(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    file = models.FileField(upload_to='uploads/')
+    comments = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)

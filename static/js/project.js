@@ -21,21 +21,42 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Gantt Chart Modal
-  document.querySelectorAll('.view-gantt-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const projectName = this.getAttribute('data-project-name');
-      const progress = this.getAttribute('data-progress');
+// Gantt Chart Modal
+document.querySelectorAll('.view-gantt-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    const projectName = this.getAttribute('data-project-name');
+    const progress = this.getAttribute('data-progress');
+    const tasks = JSON.parse(this.getAttribute('data-tasks'));
 
-      // Update modal content
-      document.getElementById('ganttModalLabel').textContent = `Gantt Chart: ${projectName}`;
-      document.getElementById('ganttProjectTitle').innerHTML = `<strong>Project:</strong> ${projectName}`;
-      document.getElementById('ganttProgressBar').style.width = `${progress}%`;
-      document.getElementById('ganttProgressBar').textContent = `${progress}%`;
-      document.getElementById('ganttProgressPercent').innerHTML = `<strong>Progress:</strong> ${progress}% Completed`;
+    // Update modal header
+    document.getElementById('ganttModalLabel').textContent = `Gantt Chart: ${projectName}`;
+    document.getElementById('ganttProjectTitle').innerHTML = `<strong>Project:</strong> ${projectName}`;
+    document.getElementById('ganttProgressBar').style.width = `${progress}%`;
+    document.getElementById('ganttProgressBar').textContent = `${progress}%`;
+    document.getElementById('ganttProgressPercent').innerHTML = `<strong>Progress:</strong> ${progress}% Completed`;
 
-      const ganttModal = new bootstrap.Modal(document.getElementById('ganttModal'));
-      ganttModal.show();
+    // Create visual breakdown of tasks
+    let taskHtml = '';
+    tasks.forEach(task => {
+      taskHtml += `
+        <div class="mt-3">
+          <strong>${task.title}</strong> (Due: ${task.due})<br>
+          <div class="progress mt-1" style="height: 12px;">
+            <div class="progress-bar bg-info" style="width: ${task.progress}%;">
+              ${task.progress}%
+            </div>
+          </div>
+        </div>
+      `;
     });
+
+    document.getElementById('ganttProgressPercent').innerHTML += taskHtml;
+
+    // Show modal
+    const ganttModal = new bootstrap.Modal(document.getElementById('ganttModal'));
+    ganttModal.show();
   });
+});
+
 
 });

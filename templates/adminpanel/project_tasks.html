@@ -1,0 +1,161 @@
+{% extends 'adminpanel/index.html' %}
+{% load static %}
+
+{% block title %}Project Tasks{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+<div class="container-fluid py-4">
+
+  <!-- Project Info Header -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h4 class="mb-0">Tasks for Project: {{ project.name }}</h4>
+      <p class="text-muted">{{ project.description }}</p>
+      <span class="badge bg-info me-2">Type: {{ project.get_project_type_display }}</span>
+      <span class="badge bg-warning me-2">Status: {{ project.get_status_display }}</span>
+      <span class="badge bg-secondary">Due: {{ project.due_date|date:"Y-m-d" }}</span>
+    </div>
+  </div>
+
+  <!-- Task Table -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">All Tasks</h5>
+      <button class="btn btn-outline-secondary btn-sm" id="exportTasksCsv">Export to CSV</button>
+    </div>
+    <div class="card-body table-responsive">
+      <table class="table table-hover table-bordered" id="tasksTable">
+        <thead class="table-light">
+          <tr>
+            <th>Task Title</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Priority</th>
+            <th>Due Date</th>
+            <th>Assigned To</th>
+            <th>Progress</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for task in tasks %}
+          <tr data-task-id="{{ task.id }}" class="{% if task.parent_task_id %}subtask task-parent-{{ task.parent_task_id }} d-none{% endif %}">
+            <td>
+              {% if task.subtasks.exists %}
+                <button class="btn btn-sm btn-toggle" data-target=".task-parent-{{ task.id }}">+</button>
+              {% endif %}
+              {{ task.title }}
+            </td>
+            <td>
+              <select class="form-select form-select-sm task-status" data-task-id="{{ task.id }}">
+                {% for key, value in task.STATUS_CHOICES %}
+                  <option value="{{ key }}" {% if task.status == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+              </select>
+            </td>
+            <td>{{ task.task_type }}</td>
+            <td>{{ task.priority }}</td>
+            <td>{{ task.due_date|date:"Y-m-d" }}</td>
+            <td>{{ task.assigned_to.get_full_name|default:"Unassigned" }}</td>
+            <td style="width: 150px;">
+                <div class="d-flex align-items-center gap-1">
+                    <input type="number" min="0" max="100" class="form-control form-control-sm task-progress-input"
+                        data-task-id="{{ task.id }}" value="{{ task.progress }}" style="width: 60px;">
+                    <span>%</span>
+                </div>
+                <div class="progress mt-1" style="height: 6px;">
+                    <div class="progress-bar bg-info" style="width: {{ task.progress }}%;"></div>
+                </div>
+                </td>
+
+            <td>{{ task.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted">No tasks found for this project.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'admin_overview' %}" class="btn btn-outline-dark">← Back to Project Overview</a>
+  </div>
+
+</div>
+
+<!-- CSV Export Script -->
+<script>
+document.getElementById("exportTasksCsv").addEventListener("click", () => {
+  const rows = [...document.querySelectorAll("table tr")];
+  const csv = rows.map(row =>
+    [...row.children].map(cell => `"${cell.innerText.trim()}"`).join(",")
+  ).join("\n");
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "project_tasks.csv";
+  link.click();
+});
+
+// Inline Status Editing
+const statusInputs = document.querySelectorAll(".task-status");
+statusInputs.forEach(select => {
+  select.addEventListener("change", function () {
+    const taskId = this.dataset.taskId;
+    const newStatus = this.value;
+
+    fetch(`/admin/update-task-status/${taskId}/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": '{{ csrf_token }}'
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+  });
+});
+
+// Collapsible Subtasks
+const toggleButtons = document.querySelectorAll(".btn-toggle");
+toggleButtons.forEach(button => {
+  button.addEventListener("click", function () {
+    const target = this.getAttribute("data-target");
+    const subtasks = document.querySelectorAll(target);
+    subtasks.forEach(sub => sub.classList.toggle("d-none"));
+    this.textContent = this.textContent === '+' ? '-' : '+';
+  });
+});
+
+  // Update task progress via AJAX
+  document.querySelectorAll(".task-progress-input").forEach(input => {
+    input.addEventListener("change", () => {
+      const taskId = input.dataset.taskId;
+      const progress = parseInt(input.value);
+      if (progress < 0 || progress > 100) {
+        alert("Progress must be between 0 and 100.");
+        return;
+      }
+
+      fetch(`/admin/update-task-progress/${taskId}/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: JSON.stringify({ progress: progress })
+      }).then(res => {
+        if (res.ok) {
+          location.reload();  // Or dynamically update the progress bar
+        } else {
+          alert("Failed to update progress");
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

@@ -20,5 +20,9 @@ urlpatterns = [
     path('finance/edit-expenditure/<int:pk>/', views.edit_expenditure, name='edit_expenditure'),
     path('finance/delete-expenditure/<int:pk>/', views.delete_expenditure, name='delete_expenditure'),
     path('admin/user-kanban/<int:user_id>/', views.admin_user_kanban, name='admin_user_kanban'),
+    path('assign-project/', views.assign_project, name='assign_project'),
+    path('api/gantt-data/', views.gantt_data_api, name='gantt_data_api'),
+    path('admin/project-tasks/<str:project_name>/', views.project_task_detail, name='project_task_detail'),
+    path('admin/update-task-progress/<int:task_id>/', views.update_task_progress, name='update_task_progress'),
 
 ]

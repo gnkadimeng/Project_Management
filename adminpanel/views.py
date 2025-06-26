@@ -1,16 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import CostCentre, Expenditure, SupervisorProfile, SupervisorFeedback
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+import json
 from projects.models import Project, Submission, StudentProfile, Meeting, ChatMessage, Task, Assignment
 from django.contrib.auth import get_user_model
 from .forms import SupervisorFeedbackForm
 from django.http import JsonResponse, HttpResponseBadRequest
 from decimal import Decimal, InvalidOperation
-from django.db.models import Sum
+from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils.dateparse import parse_date
 from manager.models import Paper
+
 
 
 @login_required
@@ -24,34 +27,107 @@ def app_kanban(request):
 
 
 @login_required
+@user_passes_test(lambda u: u.role in ['admin', 'manager'])
 def admin_ganttchart(request):
-    return render(request, 'adminpanel/admin_ganttchart.html')
+    projects = Project.objects.prefetch_related('tasks__subtasks')
+    return render(request, 'adminpanel/admin_ganttchart.html', {'projects': projects})
+
+
 
 @login_required
 def overview(request):
     User = get_user_model()
     users = User.objects.all()
 
-    projects = Project.objects.prefetch_related('tasks', 'assignments__team_member__user').select_related('created_by')
+    # Fetch projects with related tasks and team assignments
+    projects = Project.objects.prefetch_related(
+        'tasks',
+        'assignments__team_member__user'
+    ).select_related('created_by', 'assigned_user')
 
     for project in projects:
         tasks = project.tasks.all()
         total = tasks.count()
         completed = tasks.filter(status='done').count()
+
+        # Calculate progress percentage
         project.progress = int((completed / total) * 100) if total else 0
 
-        # Use first assigned team member if available
-        if project.assignments.exists():
-            assignment = project.assignments.first()
-            project.assigned_user = assignment.team_member.user
-        else:
-            project.assigned_user = project.created_by
+        # Assign an assigned_user if it's not set
+        if not project.assigned_user:
+            if project.assignments.exists():
+                assigned = project.assignments.first().team_member.user
+                project.assigned_user = assigned
+            else:
+                project.assigned_user = project.created_by
+            project.save(update_fields=['assigned_user'])
 
     return render(request, 'adminpanel/overview.html', {
         'projects': projects,
         'users': users
     })
 
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def assign_project(request):
+    if request.method == 'POST':
+        name = request.POST.get('project_name')
+        type = request.POST.get('project_type')
+        status = request.POST.get('status')
+        assigned_user_id = request.POST.get('assigned_user')
+        description = request.POST.get('description', '')
+        due_date = request.POST.get('due_date')
+        
+        assigned_user = get_object_or_404(get_user_model(), id=assigned_user_id)
+
+        Project.objects.create(
+            name=name,
+            project_type=type,
+            status=status,
+            assigned_user=assigned_user,
+            description=description,
+            created_by=request.user,
+            due_date=due_date
+        )
+        return redirect('overview')
+    
+@login_required
+def gantt_data_api(request):
+    projects = Project.objects.prefetch_related('tasks').all()
+    data = []
+
+    for project in projects:
+        for task in project.tasks.all():
+            data.append({
+                "id": f"T{task.id}",
+                "name": task.title,
+                "resource": project.name,
+                "start": task.created_at.strftime('%Y-%m-%d'),
+                "end": task.due_date.strftime('%Y-%m-%d') if task.due_date else None,
+                "progress": 0 if task.status == 'todo' else 25 if task.status == 'in_progress' else 75 if task.status == 'review' else 100,
+                "dependencies": f"T{task.parent_task.id}" if task.parent_task else None,
+            })
+    return JsonResponse(data, safe=False)
+
+
+@login_required
+def project_task_detail(request, project_name):
+    project = get_object_or_404(Project, name=project_name)
+    tasks = Task.objects.filter(project=project)
+    return render(request, 'adminpanel/project_tasks.html', {'project': project, 'tasks': tasks})
+
+@csrf_exempt
+def update_task_progress(request, task_id):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        try:
+            task = Task.objects.get(id=task_id)
+            task.progress = min(max(int(data["progress"]), 0), 100)
+            task.save()
+            return JsonResponse({"success": True})
+        except Task.DoesNotExist:
+            return JsonResponse({"error": "Task not found"}, status=404)
+    return JsonResponse({"error": "Invalid request"}, status=400)
 
 @login_required
 def finance(request):
@@ -295,3 +371,17 @@ def admin_user_kanban(request, user_id):
         'user': user,
         'task_data': task_data
     })
+
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def assign_project_manager(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    if request.method == 'POST':
+        user_id = request.POST.get('manager_id')
+        manager = get_object_or_404(get_user_model(), id=user_id, role='manager')
+        project.assigned_user = manager
+        project.save()
+        return redirect('overview')  # or admin_dashboard
+    managers = get_user_model().objects.filter(role='manager')
+    return render(request, 'adminpanel/assign_project.html', {'project': project, 'managers': managers})
+

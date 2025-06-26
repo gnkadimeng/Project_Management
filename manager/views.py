@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
+from django.db import models
 from projects.models import Project, Task, Assignment
 from projects.forms import ProjectForm, AssignmentForm, TaskForm
 from .models import LearningContent, Template, Paper, Book, Chapter
@@ -71,12 +72,15 @@ def manager_kanban(request):
 
 @login_required
 def assign_projects_view(request):
-    projects = Project.objects.filter(created_by=request.user)
+    # projects = Project.objects.filter(created_by=request.user)
+    projects = Project.objects.filter(
+        models.Q(created_by=request.user) | models.Q(assigned_user=request.user)
+    ).distinct()
     selected_project = None
     assignments = None
     assignment_form = None
     eligible_users = get_user_model().objects.exclude(role='student')
-    project_form = ProjectForm()  # ✅ Add this
+    project_form = ProjectForm()
 
     project_id = request.GET.get('project_id')
     if project_id:
@@ -150,15 +154,33 @@ def remove_assignment(request, assignment_id):
 
 
 @login_required
-def add_task(request):
+def add_task(request, project_id):
+    project = get_object_or_404(
+        Project.objects.filter(
+            Q(id=project_id) & (Q(created_by=request.user) | Q(assigned_user=request.user))
+        )
+    )
+    
     if request.method == 'POST':
         title = request.POST.get('title')
         priority = request.POST.get('priority')
         due_date = request.POST.get('due_date') or None
         status = request.POST.get('status')
         task_type = request.POST.get('task_type')
-        project_id = request.POST.get('project')
-        project = Project.objects.filter(id=project_id).first() if project_id else None
+        assigned_to_id = request.POST.get('assigned_to')
+        parent_task_id = request.POST.get('parent_task')
+
+        assigned_to = None
+        parent_task = None
+
+        if assigned_to_id:
+            assigned_to = get_user_model().objects.get(id=assigned_to_id)
+
+        if parent_task_id:
+            parent_task = Task.objects.get(id=parent_task_id)
+
+        # project_id = request.POST.get('project')
+        # project = Project.objects.filter(id=project_id).first() if project_id else None
 
         Task.objects.create(
             title=title,
@@ -168,8 +190,14 @@ def add_task(request):
             task_type=task_type,
             created_by=request.user,
             project=project,
+            assigned_to=assigned_to,
+            parent_task=parent_task
         )
-    return redirect('manager_kanban')
+        messages.success(request, 'Task created successfully!')
+        return redirect(f"{reverse('assign_projects')}?project_id={project.id}")
+
+    return redirect('assign_projects')
+  
 
 @login_required
 def edit_task(request, task_id):

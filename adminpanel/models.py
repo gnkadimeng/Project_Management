@@ -64,16 +64,11 @@ class Project(models.Model):
         ('completed', 'Completed'),
     ])
     progress = models.IntegerField(default=0)
-    assigned_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, 
-        related_name='projects'
-    )
+    assigned_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='adminpanelprojects')
 
     def __str__(self):
         return self.name
         
-
 
 class SupervisorProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, limit_choices_to={'role': 'admin'})
@@ -111,4 +106,5 @@ class SupervisorFeedback(models.Model):
 def create_supervisor_profile(sender, instance, created, **kwargs):
     if created and instance.role in ['admin']:
         SupervisorProfile.objects.get_or_create(user=instance)
+
 

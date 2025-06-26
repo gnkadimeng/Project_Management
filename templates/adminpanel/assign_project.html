@@ -1,0 +1,41 @@
+<!-- assign projects to project managers -->
+{% extends "adminpanel/base.html" %}
+{% load static %}
+
+{% block title %}Assign Project{% endblock %}
+
+{% block content %}
+
+<form method="post">
+  {% csrf_token %}
+  <label>Select Project Manager:</label>
+  <select name="manager_id">
+    {% for manager in managers %}
+      <option value="{{ manager.id }}">{{ manager.get_full_name }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit">Assign</button>
+</form>
+
+{% if message %}
+  <div class="alert alert-success">
+    {{ message }}
+  </div>
+{% endif %}
+{% if error %}
+  <div class="alert alert-danger">
+    {{ error }}
+  </div>
+{% endif %}
+{% if projects %}
+  <h2>Available Projects</h2>
+  <ul>
+    {% for project in projects %}
+      <li>{{ project.name }} - {{ project.description }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No projects available for assignment.</p>
+{% endif %}
+
+{% endblock %}

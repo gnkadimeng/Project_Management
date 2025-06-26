@@ -85,13 +85,25 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv("DATABASE_URL", "postgres://postgres:Musa@localhost:5432/project_management"),
+#         conn_max_age=600,
+#         ssl_require=False
+#     )
+# }
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", "postgres://postgres:Musa@localhost:5432/project_management"),
-        conn_max_age=600,
-        ssl_require=False  # Set True if deploying to cloud (like Heroku)
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'project_management',
+        'USER': 'postgres',
+        'PASSWORD': 'Musa',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
 }
+
 
 
 # Password validation

@@ -35,8 +35,26 @@
     </select>
   </div>
 
+  <!-- Assign Projects and Project Managers -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Assign Projects</h5>
+      <div class="d-flex justify-content-between mb-3">
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#assignProjectModal">
+          + Assign New Project
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <p>Select a project to assign it to a project manager.</p>
+    </div>
+    </div>
+    <br>
+
+
   <!-- Projects Table -->
-  <div class="table-responsive">
+<div class="card mb-4">
+    <div class="table-responsive">
     <table class="table table-bordered table-hover" id="projectsTable">
       <thead class="table-light">
         <tr>
@@ -69,14 +87,26 @@
     </div>
     <small>{{ project.progress }}%</small>
   </td>
-  <td>{{ project.created_by.username }}</td>
+  <!-- <td>{{ project.created_by.username }}</td> -->
+  <td>{{ project.assigned_user.get_full_name|default:project.assigned_user.username }}</td>
+
   <td>{{ project.due_date|date:"Y-m-d" }}</td>
   <td>
-    <button class="btn btn-sm btn-outline-primary view-gantt-btn" 
-            data-project-name="{{ project.name }}" 
-            data-progress="{{ project.progress }}">
-      View Gantt
-    </button>
+   <button class="btn btn-sm btn-outline-primary view-gantt-btn"
+        data-project-name="{{ project.name }}"
+        data-progress="{{ project.progress }}"
+        data-tasks='[
+          {% for task in project.tasks.all %}
+            {
+              "title": "{{ task.title|escapejs }}",
+              "progress": {{ task.progress }},
+              "due": "{{ task.due_date }}"
+            }{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ]'>
+  View Gantt
+</button>
+
   </td>
 </tr>
 {% endfor %}
@@ -84,6 +114,7 @@
       </tbody>
     </table>
   </div>
+</div>
 
   <!-- View Team Member Kanban  -->
 
@@ -145,6 +176,68 @@
     </div>
   </div>
 </div>
+
+<!-- Assign Project Modal -->
+<div class="modal fade" id="assignProjectModal" tabindex="-1" aria-labelledby="assignProjectModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="{% url 'assign_project' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="assignProjectModalLabel">Assign New Project</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <label for="projectName" class="form-label">Project Name</label>
+            <input type="text" class="form-control" name="project_name" id="projectName" required>
+          </div>
+          <div class="col-md-6">
+            <label for="projectType" class="form-label">Project Type</label>
+            <select name="project_type" class="form-select" required>
+              <option value="software">Software Project</option>
+              <option value="paper">Research Paper</option>
+              <option value="book">Book</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" class="form-select">
+              <option value="planning">Planning</option>
+              <option value="in-progress">In Progress</option>
+              <option value="on-hold">On Hold</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="assignedUser" class="form-label">Assign to Project Manager</label>
+            <select name="assigned_user" class="form-select" required>
+              {% for user in users %}
+        <option value="{{ user.id }}">
+          {{ user.get_full_name|default:user.username }}
+        </option>
+      {% empty %}
+        <option disabled>No users available</option>
+      {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-12">
+            <label for="description" class="form-label">Project Description</label>
+            <textarea name="description" class="form-control" rows="3"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label for="dueDate" class="form-label">Due Date</label>
+            <input type="date" class="form-control" name="due_date" id="dueDate" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Assign Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
