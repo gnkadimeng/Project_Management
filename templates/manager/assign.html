@@ -203,6 +203,64 @@ body {
     </div>
 </div>
 
+<!-- ✅ Task Table Section -->
+<div class="card mt-4">
+    <div class="card-header">
+        <i class="bi bi-table"></i> Task Table for "{{ project.name }}"
+    </div>
+    <div class="card-body table-responsive">
+        {% if project.tasks.all %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Type</th>
+                    <th>Due Date</th>
+                    <th>Assigned To</th>
+                    <th>Parent Task</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in project.tasks.all %}
+                <tr>
+                    <td>{{ task.title }}</td>
+                    <td>
+                        <span class="badge 
+                            {% if task.status == 'todo' %}bg-secondary
+                            {% elif task.status == 'in_progress' %}bg-primary
+                            {% elif task.status == 'review' %}bg-warning text-dark
+                            {% elif task.status == 'done' %}bg-success
+                            {% endif %}">
+                            {{ task.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ task.priority }}</td>
+                    <td>{{ task.task_type }}</td>
+                    <td>{{ task.due_date|default:"—" }}</td>
+                    <td>{{ task.assigned_to.get_full_name|default:task.assigned_to.username|default:"—" }}</td>
+                    <td>{{ task.parent_task.title|default:"—" }}</td>
+                    <td>
+                        <form method="POST" action="{% url 'manager_delete_task' task.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No tasks have been added for this project yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+
 <!-- Create Project Modal -->
 <div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">

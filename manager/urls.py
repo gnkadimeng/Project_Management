@@ -38,8 +38,7 @@ urlpatterns = [
     path('add-chapter/<int:book_id>/', views.add_chapter, name='add_chapter'),
     path('edit-chapter/<int:chapter_id>/', views.edit_chapter, name='edit_chapter'),
     path('get-chapters/<int:book_id>/', views.get_chapters, name='get_chapters'),
-
-
+    path('gantt/data/all/', views.manager_gantt_all_data, name='manager_gantt_all_data'),
 ]
 
 

@@ -36,7 +36,34 @@ def app_kanban(request):
 
 @login_required
 def manager_ganttchart(request):
-    return render(request, 'manager/manager_ganttchart.html')
+    projects = Project.objects.filter(
+        Q(created_by=request.user) | Q(assigned_user=request.user)
+    ).distinct()
+
+    return render(request, 'manager/manager_ganttchart.html', {'projects': projects})
+
+
+@login_required
+def manager_gantt_all_data(request):
+    projects = Project.objects.filter(
+        Q(created_by=request.user) | Q(assigned_user=request.user)
+    ).distinct()
+
+    data = []
+
+    for project in projects:
+        for task in project.tasks.all():
+            data.append({
+                "id": f"T{task.id}",
+                "name": f"{project.name}: {task.title}",
+                "start": task.created_at.strftime('%Y-%m-%d'),
+                "end": task.due_date.strftime('%Y-%m-%d') if task.due_date else task.created_at.strftime('%Y-%m-%d'),
+                "progress": task.progress or 0,
+                "dependencies": f"T{task.parent_task.id}" if task.parent_task else None,
+                "custom_class": f"project-{project.id}"  # For visual separation if needed
+            })
+
+    return JsonResponse(data, safe=False)
 
 
 TASK_TYPES = ['UX/UI', 'Architecture', 'Frontend', 'Backend', 'Testing', 'Deployment', 'Paper', 'Book', 'Other']
@@ -52,8 +79,7 @@ def manager_kanban(request):
     statuses = list(status_labels.keys())
     priorities = ['Low', 'Medium', 'High']
 
-    # Filter tasks created by this manager only
-    tasks = Task.objects.filter(created_by=request.user)
+    tasks = Task.objects.filter(Q(created_by=request.user) | Q(project__assigned_user=request.user))
     tasks_by_status = defaultdict(list)
     for task in tasks:
         tasks_by_status[task.status].append(task)
@@ -64,27 +90,49 @@ def manager_kanban(request):
         'priorities': priorities,
         'grouped_tasks': dict(tasks_by_status),
         'task_types': TASK_TYPES,
-        'projects': Project.objects.all(),
+        'projects': Project.objects.filter(Q(created_by=request.user) | Q(assigned_user=request.user)).distinct(),
         'today': now().date(),
     }
     return render(request, 'manager/manager_kanban.html', context)
+
+    # tasks = Task.objects.filter(created_by=request.user)
+    # tasks_by_status = defaultdict(list)
+    # for task in tasks:
+    #     tasks_by_status[task.status].append(task)
+
+    # context = {
+    #     'statuses': statuses,
+    #     'status_labels': status_labels,
+    #     'priorities': priorities,
+    #     'grouped_tasks': dict(tasks_by_status),
+    #     'task_types': TASK_TYPES,
+    #     'projects': Project.objects.all(),
+    #     'today': now().date(),
+    # }
+    # return render(request, 'manager/manager_kanban.html', context)
 
 
 @login_required
 def assign_projects_view(request):
     # projects = Project.objects.filter(created_by=request.user)
+    project_id = request.GET.get('project_id')
+
     projects = Project.objects.filter(
-        models.Q(created_by=request.user) | models.Q(assigned_user=request.user)
+        Q(created_by=request.user) | Q(assigned_user=request.user)
     ).distinct()
+
     selected_project = None
     assignments = None
     assignment_form = None
     eligible_users = get_user_model().objects.exclude(role='student')
     project_form = ProjectForm()
 
-    project_id = request.GET.get('project_id')
     if project_id:
-        selected_project = get_object_or_404(Project, id=project_id)
+        selected_project = get_object_or_404(
+            Project,
+            Q(created_by=request.user) | Q(assigned_user=request.user),
+            id=project_id
+        )
         assignments = selected_project.assignments.all()
         assignment_form = AssignmentForm()
 
@@ -107,13 +155,19 @@ def create_project(request):
             project.created_by = request.user
             project.save()
             messages.success(request, 'Project created successfully!')
-            return redirect('assign_projects')  # redirect back to assign view
+            return redirect('assign_projects') 
     return redirect('assign_projects')
+
 
 
 @login_required
 def assign_team_member(request, project_id):
-    project = get_object_or_404(Project, id=project_id, created_by=request.user)
+    project = get_object_or_404(
+        Project.objects.filter(
+            models.Q(created_by=request.user) | models.Q(assigned_user=request.user),
+            id=project_id
+        )
+    )
 
     if request.method == 'POST':
         form = AssignmentForm(request.POST)
@@ -126,8 +180,10 @@ def assign_team_member(request, project_id):
         else:
             messages.error(request, 'Assignment failed. Please check the form.')
 
-            # reload assign.html manually with full context
-            projects = Project.objects.filter(created_by=request.user)
+            projects = Project.objects.filter(
+                models.Q(created_by=request.user) | models.Q(assigned_user=request.user)
+            ).distinct()
+
             assignments = project.assignments.all()
             eligible_users = get_user_model().objects.exclude(role='student')
             project_form = ProjectForm()
@@ -136,7 +192,7 @@ def assign_team_member(request, project_id):
                 'projects': projects,
                 'project': project,
                 'assignments': assignments,
-                'assignment_form': form,  # the form with errors
+                'assignment_form': form,
                 'eligible_users': eligible_users,
                 'project_form': project_form,
             }
@@ -144,13 +200,20 @@ def assign_team_member(request, project_id):
 
     return redirect(f"{reverse('assign_projects')}?project_id={project.id}")
 
+
 @login_required
 def remove_assignment(request, assignment_id):
-    assignment = get_object_or_404(Assignment, id=assignment_id, project__created_by=request.user)
+    assignment = get_object_or_404(
+        Assignment,
+        id=assignment_id,
+        project__in=Project.objects.filter(
+            Q(created_by=request.user) | Q(assigned_user=request.user)
+        )
+    )
     if request.method == 'POST':
         assignment.delete()
         messages.success(request, 'Team member removed.')
-        return redirect('assign_projects', project_id=assignment.project.id)
+        return redirect(f"{reverse('assign_projects')}?project_id={assignment.project.id}")
 
 
 @login_required
@@ -178,9 +241,6 @@ def add_task(request, project_id):
 
         if parent_task_id:
             parent_task = Task.objects.get(id=parent_task_id)
-
-        # project_id = request.POST.get('project')
-        # project = Project.objects.filter(id=project_id).first() if project_id else None
 
         Task.objects.create(
             title=title,
@@ -235,11 +295,15 @@ def update_task_status(request, task_id):
 
 @login_required
 def manager_delete_task(request, task_id):
-    task = get_object_or_404(Task, id=task_id, created_by=request.user)
+    task = get_object_or_404(
+        Task,
+        Q(created_by=request.user) | Q(project__assigned_user=request.user),
+        id=task_id
+    )
+    
     if request.method == 'POST':
         task.delete()
     return redirect('manager_kanban')
-
     
 @login_required
 def add_learning_resource(request):
