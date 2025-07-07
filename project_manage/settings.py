@@ -94,15 +94,15 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'project_management',
-        'USER': 'postgres',
-        'PASSWORD': 'Musa',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default=os.getenv(
+            'DATABASE_URL',
+            'postgres://postgres:postgres@db:5432/project_management'  # <-- NOTE the host is 'db' here
+        ),
+        conn_max_age=600,
+    )
 }
+
 
 
 

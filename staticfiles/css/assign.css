@@ -1,0 +1,274 @@
+:root {
+            --coral: #FF6B6B;
+            --coral-light: #FF8E8E;
+            --coral-dark: #E55C5C;
+            --dark-purple: #4A235A;
+            --dark-purple-light: #6C3483;
+            --grey: #7F8C8D;
+            --grey-light: #BDC3C7;
+            --grey-dark: #34495E;
+            --light-bg: #f8f9fa;
+            --card-bg: #FFFFFF;
+            --border: #E0E0E0;
+            --success: #27AE60;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            border-bottom: 3px solid var(--coral);
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: var(--card-shadow);
+            border: none;
+            margin-bottom: 20px;
+            background-color: var(--card-bg);
+        }
+
+        .card-header {
+            background-color: var(--card-bg);
+            color: var(--dark-purple);
+            border-bottom: 2px solid var(--border);
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--coral);
+            border-color: var(--coral);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--coral-dark);
+            border-color: var(--coral-dark);
+        }
+
+        .btn-outline-primary {
+            color: var(--coral);
+            border-color: var(--coral);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--coral);
+            color: white;
+        }
+
+        .btn-purple {
+            background-color: var(--dark-purple);
+            border-color: var(--dark-purple);
+            color: white;
+        }
+
+        .btn-purple:hover {
+            background-color: var(--dark-purple-light);
+            border-color: var(--dark-purple-light);
+            color: white;
+        }
+
+        .project-card {
+            border-left: 3px solid var(--coral);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .project-card:hover {
+            background-color: rgba(255, 107, 107, 0.05);
+        }
+
+        .project-card.active {
+            background-color: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid var(--coral-dark);
+        }
+
+        .team-member {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+
+        .team-member:hover {
+            background-color: rgba(255, 107, 107, 0.05);
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--coral);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .responsibilities {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            border-left: 3px solid var(--success);
+            font-size: 0.9rem;
+        }
+
+        .badge-type {
+            background-color: var(--coral-light);
+            color: white;
+            font-weight: normal;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--grey);
+        }
+
+        .search-input {
+            padding-left: 40px;
+            border-radius: 50px;
+        }
+
+        .section-title {
+            color: var(--dark-purple);
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            opacity: 1;
+        }
+
+        .project-type-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .type-software { background-color: var(--coral); }
+        .type-book { background-color: var(--dark-purple); }
+        .type-paper { background-color: var(--grey); }
+
+        .project-details-content {
+            padding: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--grey);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--grey-light);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .team-member-actions {
+            display: flex;
+            gap: 10px;
+        }
+       
+        .back-to-dashboard {
+            background-color: var(--dark-purple);
+            color: white;
+            border-radius: 30px;
+            padding: 8px 20px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+       
+        .back-to-dashboard:hover {
+            background-color: var(--dark-purple-light);
+            color: white;
+            transform: translateY(-2px);
+        }
+       
+        .team-member-dropdown {
+            background-color: var(--dark-purple);
+            color: white;
+            border: none;
+        }
+       
+        .team-member-dropdown:hover {
+            background-color: var(--dark-purple-light);
+        }
+       
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+       
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+       
+        .filter-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
