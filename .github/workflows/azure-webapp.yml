@@ -9,39 +9,42 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
+    env:
+      IMAGE_NAME: django-project-management
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
+    - name: 📥 Checkout code
+      uses: actions/checkout@v3
+
+    - name: 🐍 Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.13'
-    
-    - name: Install dependencies
+
+    - name: 📦 Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
-    - name: Run tests
-      run: |
-        python manage.py test
-    
-    - name: Log in to Azure Container Registry
+
+    - name: ✅ Run tests
+      run: python manage.py test
+
+    - name: 🔐 Log in to Docker registry
       uses: azure/docker-login@v1
       with:
         login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
-    
-    - name: Build and push Docker image
+
+    - name: 🛠️ Build and push Docker image
       run: |
-        docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/django-project-management:${{ github.sha }} .
-        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/django-project-management:${{ github.sha }}
-    
-    - name: Deploy to Azure Web App
+        docker build -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} .
+        docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+    - name: 🚀 Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/django-project-management:${{ github.sha }}
+        images: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
