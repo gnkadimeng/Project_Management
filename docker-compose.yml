@@ -13,21 +13,24 @@ services:
       - "5432:5432"
 
   web:
-    build: .
+    build:
+      context: .
     ports:
       - "8000:8000"
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_management
-      - DEBUG=False
-      - ALLOWED_HOSTS=localhost,127.0.0.1
+      DATABASE_URL: postgres://postgres:postgres@db:5432/project_management
+      DEBUG: "False"
+      ALLOWED_HOSTS: localhost,127.0.0.1
     volumes:
       - .:/app
     command: >
-      sh -c "python manage.py migrate &&
-             python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8000 project_manage.wsgi:application"
+      sh -c "
+        python manage.py migrate &&
+        python manage.py collectstatic --noinput &&
+        gunicorn --bind 0.0.0.0:8000 project_manage.wsgi:application
+      "
 
 volumes:
   postgres_data:
