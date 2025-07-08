@@ -26,16 +26,39 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-_0c$9attqx23_v=(t13^$f8!z)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-# For Azure Web Apps, the hostname is provided by Azure
+# Enhanced ALLOWED_HOSTS configuration for Azure Container Apps and other platforms
 ALLOWED_HOSTS = [
     '127.0.0.1', 
     'localhost', 
     'project_manage.onrender.com',
-    os.getenv('WEBSITE_HOSTNAME', ''),  # Azure Web App hostname
 ]
+
+# Add Azure hostnames
+azure_hostname = os.getenv('WEBSITE_HOSTNAME', '')  # Azure App Service
+if azure_hostname:
+    ALLOWED_HOSTS.append(azure_hostname)
+
+# Add Container Apps hostname (from environment or HTTP_HOST)
+container_app_hostname = os.getenv('CONTAINER_APP_HOSTNAME', '')
+if container_app_hostname:
+    ALLOWED_HOSTS.append(container_app_hostname)
+
+# Allow custom ALLOWED_HOSTS from environment variable
+custom_hosts = os.getenv('ALLOWED_HOSTS', '')
+if custom_hosts:
+    # Split by comma and add to ALLOWED_HOSTS
+    ALLOWED_HOSTS.extend([host.strip() for host in custom_hosts.split(',') if host.strip()])
+
+# For development/testing, allow all hosts if DEBUG is True
+if DEBUG and os.getenv('ALLOW_ALL_HOSTS', 'False').lower() == 'true':
+    ALLOWED_HOSTS = ['*']
 
 # Remove empty strings from ALLOWED_HOSTS
 ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
+
+# Ensure we have at least localhost for local development
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
