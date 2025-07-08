@@ -60,6 +60,29 @@ ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
 if not ALLOWED_HOSTS:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+# CSRF Configuration - Enhanced for Azure Container Apps
+CSRF_TRUSTED_ORIGINS = [
+    'https://127.0.0.1',
+    'https://localhost', 
+    'https://project_manage.onrender.com',
+]
+
+# Add Azure hostnames to CSRF trusted origins
+if azure_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{azure_hostname}')
+
+if container_app_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{container_app_hostname}')
+
+# Allow custom CSRF_TRUSTED_ORIGINS from environment variable
+custom_csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if custom_csrf_origins:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in custom_csrf_origins.split(',') if origin.strip()])
+
+# For development/testing, disable CSRF if needed (NOT recommended for production)
+if DEBUG and os.getenv('DISABLE_CSRF', 'False').lower() == 'true':
+    MIDDLEWARE = [m for m in MIDDLEWARE if m != 'django.middleware.csrf.CsrfViewMiddleware']
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
