@@ -93,7 +93,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 #     )
 # }
 
-
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -116,7 +116,7 @@ DATABASES = {
     )
 }
 
-"""
+
 
 
 
