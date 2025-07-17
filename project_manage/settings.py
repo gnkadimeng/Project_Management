@@ -93,6 +93,19 @@ AUTH_USER_MODEL = 'users.CustomUser'
 #     )
 # }
 
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'db',
+        'USER': 'postgres',
+        'PASSWORD': 'Admin',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+"""
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv(
@@ -103,6 +116,7 @@ DATABASES = {
     )
 }
 
+"""
 
 
 

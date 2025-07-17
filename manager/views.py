@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.db import models
-from projects.models import Project, Task, Assignment
+from projects.models import Project, Task, Assignment,TeamMember
 from projects.forms import ProjectForm, AssignmentForm, TaskForm
 from .models import LearningContent, Template, Paper, Book, Chapter
 from .forms import BookForm
@@ -116,16 +116,25 @@ def manager_kanban(request):
 def assign_projects_view(request):
     # projects = Project.objects.filter(created_by=request.user)
     project_id = request.GET.get('project_id')
-
+    
     projects = Project.objects.filter(
         Q(created_by=request.user) | Q(assigned_user=request.user)
     ).distinct()
-
+   
     selected_project = None
     assignments = None
     assignment_form = None
     eligible_users = get_user_model().objects.exclude(role='student')
     project_form = ProjectForm()
+    
+    for user in User.objects.all():
+        # Only create TeamMember if one doesn't exist already
+        if not TeamMember.objects.filter(user=user).exists():
+            TeamMember.objects.create(
+                user=user,
+                full_name=f"{user.first_name} {user.last_name}".strip() or user.username,
+                role="Team Member"  # You can change this role based on your logic
+            )
 
     if project_id:
         selected_project = get_object_or_404(
@@ -133,9 +142,10 @@ def assign_projects_view(request):
             Q(created_by=request.user) | Q(assigned_user=request.user),
             id=project_id
         )
+        
         assignments = selected_project.assignments.all()
-        assignment_form = AssignmentForm()
-
+        assignment_form = AssignmentForm(project=selected_project)
+        
     context = {
         'projects': projects,
         'project': selected_project,
@@ -168,9 +178,10 @@ def assign_team_member(request, project_id):
             id=project_id
         )
     )
-
+    
     if request.method == 'POST':
-        form = AssignmentForm(request.POST)
+        form = AssignmentForm(request.POST, project=project)
+       
         if form.is_valid():
             assignment = form.save(commit=False)
             assignment.project = project
@@ -218,6 +229,7 @@ def remove_assignment(request, assignment_id):
 
 @login_required
 def add_task(request, project_id):
+    print("-------------------",project_id)
     project = get_object_or_404(
         Project.objects.filter(
             Q(id=project_id) & (Q(created_by=request.user) | Q(assigned_user=request.user))

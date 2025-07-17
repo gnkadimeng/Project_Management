@@ -60,7 +60,7 @@
     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTaskModal">Add Task</button>
 </div>
 
-{% include 'manager/partials/task_modal.html' with form_url='manager_create_task' task_types=task_types projects=projects %}
+{% include 'manager/partials/task_modal.html' with form_url='manager_create_task' task_types=task_types project_id=projects.0.id %}
 
 <div class="row">
     {% for column in status_labels.keys %}

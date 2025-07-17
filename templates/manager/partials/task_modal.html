@@ -1,7 +1,7 @@
 <div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form method="POST" action="{% url form_url %}">
+      <form method="POST" action="{% url form_url project_id %}">
         {% csrf_token %}
         <div class="modal-header">
           <h5 class="modal-title" id="addTaskModalLabel">Add New Task</h5>

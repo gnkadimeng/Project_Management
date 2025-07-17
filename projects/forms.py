@@ -73,15 +73,28 @@ class ProjectForm(forms.ModelForm):
 class AssignmentForm(forms.ModelForm):
     team_member = forms.ModelChoiceField(
         queryset=TeamMember.objects.all(),  # ✅ this is the fix
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        empty_label="Select team member",  # ✅ Custom label
+        
     )
 
     class Meta:
         model = Assignment
         fields = ['team_member', 'responsibility']
+        
         widgets = {
             'responsibility': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
+    def __init__(self, *args, **kwargs):
+        project = kwargs.pop('project', None)
+        super().__init__(*args, **kwargs)
+        if project:
+            self.fields['team_member'].queryset = TeamMember.objects.exclude(
+                id__in=Assignment.objects.filter(project=project).values('team_member')
+            )
+        else:
+            self.fields['team_member'].queryset = TeamMember.objects.all()
+
 
 class FileUploadForm(forms.Form):
     file = forms.FileField()
