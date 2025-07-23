@@ -277,7 +277,7 @@
 
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">>
+            <div class="sidebar-header">
                 <img src="{% static 'img/logo_uj-removebg-preview.png' %}" alt="" width="150px" height="70px">
                 <button class="toggle-btn" id="toggleBtn">
                     <i class="bi bi-chevron-left"></i>
@@ -700,49 +700,7 @@
     </div>
 </div>
 
-
-    <!-- Meeting Modal -->
-    <div class="modal fade" id="meetingModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Request Meeting</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="meetingRequestForm">
-                        <div class="mb-3">
-                            <label for="meetingDate" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="meetingDate" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="meetingTime" class="form-label">Time</label>
-                            <input type="time" class="form-control" id="meetingTime" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="meetingDuration" class="form-label">Duration (minutes)</label>
-                            <input type="number" class="form-control" id="meetingDuration" min="15" max="120" value="30" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="meetingPurpose" class="form-label">Purpose</label>
-                            <textarea class="form-control" id="meetingPurpose" rows="3" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="meetingMode" class="form-label">Mode</label>
-                            <select class="form-select" id="meetingMode" required>
-                                <option value="In-person">In-person</option>
-                                <option value="Virtual">Virtual</option>
-                            </select>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="submitMeetingBtn">Request Meeting</button>
-                </div>
-            </div>
-        </div>
-    </div>
+           
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -764,71 +722,6 @@
             document.getElementById('toggleBtn').addEventListener('click', toggleSidebar);
             document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
         });
-
-        // Sample data structure (in a real app, this would come from a backend API)
-
-
-        let submissions = [
-            {
-                id: 'SUB001',
-                date: '2023-05-10',
-                type: 'Chapter',
-                title: 'Chapter 1 - Introduction',
-                file: 'chapter1.pdf',
-                status: 'Feedback Provided',
-                feedback: true,
-                notes: 'Initial draft of introduction chapter'
-            },
-            {
-                id: 'SUB002',
-                date: '2023-04-15',
-                type: 'Proposal',
-                title: 'Research Proposal',
-                file: 'proposal.pdf',
-                status: 'Approved',
-                feedback: true,
-                notes: 'Final research proposal submission'
-            }
-        ];
-
-        let meetings = [
-            {
-                id: 'MTG001',
-                date: '2023-06-15',
-                time: '14:00',
-                duration: 30,
-                purpose: 'Discuss Chapter 1 feedback',
-                mode: 'Virtual',
-                status: 'Confirmed'
-            },
-            {
-                id: 'MTG002',
-                date: '2023-05-20',
-                time: '10:30',
-                duration: 45,
-                purpose: 'Research methodology discussion',
-                mode: 'In-person',
-                status: 'Completed'
-            }
-        ];
-
-        let notifications = [
-            {
-                id: 'NOT001',
-                title: 'New Feedback Received',
-                message: 'Dr. Smith has provided feedback on your Chapter 1 submission.',
-                date: '2023-05-12 10:30',
-                read: false
-            },
-            {
-                id: 'NOT002',
-                title: 'Meeting Confirmed',
-                message: 'Your meeting on June 15 at 2:00 PM has been confirmed.',
-                date: '2023-05-10 15:45',
-                read: false
-            }
-        ];
-
 
 
         // Load submissions

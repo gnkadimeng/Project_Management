@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
+from users.models import CustomUser
 from .models import CostCentre, Expenditure, SupervisorProfile, SupervisorFeedback
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -13,7 +14,7 @@ from django.db.models import Sum, Count, Q
 from django.db.models.functions import TruncMonth
 from django.utils.dateparse import parse_date
 from manager.models import Paper
-
+from django.contrib import messages
 
 
 @login_required
@@ -295,47 +296,57 @@ def provide_feedback(request, submission_id):
         'submission': submission
     })
 
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def supervisor_dashboard(request):
+    supervisor = request.user
+    student_profiles = StudentProfile.objects.filter(supervisor=supervisor).select_related('user')
+
+    return render(request, 'adminpanel/supervisor_dashboard.html', {
+        'student_profiles': student_profiles
+    })
+
+@login_required
+@user_passes_test(lambda u: u.role == 'admin')
+def student_detail_view(request, student_id):
+    student_user = CustomUser.objects.get(id=student_id)
+    student_profile = StudentProfile.objects.get(user=student_user)
+    submission_history = Submission.objects.filter(student=student_user)
+    meeting_history = Meeting.objects.filter(student=student_user)
+    form = SupervisorFeedbackForm()
+
+    return render(request, 'adminpanel/student_detail.html', {
+        'student_user': student_user,
+        'student_profile': student_profile,
+        'submission_history': submission_history,
+        'meeting_history': meeting_history,
+        'form' : form
+    })
+
+
 # @login_required
-# @user_passes_test(is_supervisor)
+# @user_passes_test(lambda u: u.role == 'admin')
 # def supervisor_dashboard(request):
-#     supervisor = request.user.supervisorprofile
-#     submissions = Submission.objects.filter(student__supervisor=request.user)
-#     meetings = Meeting.objects.filter(supervisor=supervisor)
-#     chat_messages = ChatMessage.objects.filter(sender=request.user)  # adjust filter if needed
-#     chat_form = ChatForm()
-#     meeting_form = MeetingRequestForm()
+#     supervisor = request.user  # This is the CustomUser with role='admin'
+
+#     # Step 1: Find students supervised by this admin
+#     supervised_student_users = StudentProfile.objects.filter(supervisor=supervisor).values_list('user', flat=True)
+
+#     # Step 2: Filter submissions for those student users
+#     submissions = Submission.objects.filter(student__in=supervised_student_users)
+
+#     meetings = Meeting.objects.filter(student__in=supervised_student_users)
+#     chat_messages = ChatMessage.objects.filter(sender=request.user)
+#     # chat_form = ChatForm()
+#     # meeting_form = MeetingRequestForm()
 
 #     return render(request, 'adminpanel/supervisor_dashboard.html', {
 #         'submissions': submissions,
 #         'meetings': meetings,
 #         'chat_messages': chat_messages,
-#         'chat_form': chat_form,
-#         'meeting_form': meeting_form,
+#         # 'chat_form': chat_form,
+#         # 'meeting_form': meeting_form,
 #     })
-
-@login_required
-@user_passes_test(lambda u: u.role == 'admin')
-def supervisor_dashboard(request):
-    supervisor = request.user  # This is the CustomUser with role='admin'
-
-    # Step 1: Find students supervised by this admin
-    supervised_student_users = StudentProfile.objects.filter(supervisor=supervisor).values_list('user', flat=True)
-
-    # Step 2: Filter submissions for those student users
-    submissions = Submission.objects.filter(student__in=supervised_student_users)
-
-    meetings = Meeting.objects.filter(student__in=supervised_student_users)
-    chat_messages = ChatMessage.objects.filter(sender=request.user)
-    # chat_form = ChatForm()
-    # meeting_form = MeetingRequestForm()
-
-    return render(request, 'adminpanel/supervisor_dashboard.html', {
-        'submissions': submissions,
-        'meetings': meetings,
-        'chat_messages': chat_messages,
-        # 'chat_form': chat_form,
-        # 'meeting_form': meeting_form,
-    })
 
 @login_required
 def admin_journal(request):

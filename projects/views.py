@@ -229,6 +229,9 @@ def student_dashboard(request):
     chat_messages = ChatMessage.objects.filter(sender=request.user).order_by('timestamp')
     chat_form = ChatForm()
 
+    feedback_reply_form = FeedbackReplyForm()
+
+
     context = {
         'student': {
             'name': request.user.get_full_name(),
@@ -263,6 +266,7 @@ def student_dashboard(request):
     context.update({
     'chat_messages': chat_messages,
     'chat_form': chat_form,
+    'feedback_reply_form': feedback_reply_form
     })
 
     return render(request, 'projects/student_dashboard.html', context)

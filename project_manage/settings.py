@@ -31,6 +31,15 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'project_manage.onrender.com']
 
+# allowed admin emails
+ALLOWED_ADMIN_EMAILS = [
+    'admin@gmail.com',
+    'hopelotriet@gmail.com',
+    'admin1@uj.ac.za',
+    'admin2@uj.ac.za',
+    'admin3@uj.ac.za'
+]
+
 
 # Application definition
 
@@ -85,36 +94,36 @@ AUTH_USER_MODEL = 'users.CustomUser'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL", "postgres://postgres:Musa@localhost:5432/project_management"),
+        conn_max_age=600,
+        ssl_require=False
+    )
+}
+
+"""
 # DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv("DATABASE_URL", "postgres://postgres:Musa@localhost:5432/project_management"),
-#         conn_max_age=600,
-#         ssl_require=False
-#     )
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'db',
+#         'USER': 'postgres',
+#         'PASSWORD': 'Admin',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
 # }
 
 """
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db',
-        'USER': 'postgres',
-        'PASSWORD': 'Admin',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-
-"""
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv(
-            'DATABASE_URL',
-            'postgres://postgres:postgres@db:5432/project_management'  # <-- NOTE the host is 'db' here
-        ),
-        conn_max_age=600,
-    )
-}
+# DATABASES = {
+#     'default': dj_database_url.config(
+#         default=os.getenv(
+#             'DATABASE_URL',
+#             'postgres://postgres:postgres@db:5432/project_management'  # <-- NOTE the host is 'db' here
+#         ),
+#         conn_max_age=600,
+#     )
+# }
 
 
 

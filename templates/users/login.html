@@ -323,11 +323,11 @@ select {
 					<input type="password" name="password1" placeholder="Password" required/>
 					<input type="password" name="password2" placeholder="Confirm Password" required/>
 					
-					<select name="role" required>
-						<option value="">🔽 Select Role</option>
-						<option value="admin">🛠️ Admin</option>
+					<select name="role" class="form-control" required>
+						<option value="" disabled selected>🔽 Select Role</option>
+						<!-- <option value="admin">🛠️ Admin</option> -->
 						<option value="manager">📋 Project Manager</option>
-						<option value="staff">👨‍💻 Staff</option>
+						<option value="staff">👨‍💻 Team Member</option>
 						<option value="student">🎓 Student</option>
 					</select>
 					<button type="submit">Sign Up</button>

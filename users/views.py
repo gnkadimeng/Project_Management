@@ -3,14 +3,22 @@ from django.contrib.auth import login, logout
 from .forms import CustomUserCreationForm, CustomLoginForm
 from .models import CustomUser
 from projects.models import StudentProfile
+from django.conf import settings
+from django.http import HttpResponseForbidden
 
 
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
             role = request.POST.get('role')
+
+            # Prevent anyone from trying to register as an admin
+            if role == 'admin':
+                form.add_error(None, "You are not allowed to register as an admin.")
+                return render(request, 'users/register.html', {'form': form})
+
+            user = form.save(commit=False)
             user.role = role
             user.save()
 
@@ -25,10 +33,18 @@ def register_view(request):
     return render(request, 'users/register.html', {'form': form})
 
 
+
 def login_view(request):
     form = CustomLoginForm(data=request.POST or None)
     if form.is_valid():
         user = form.get_user()
+        login(request, user)
+
+        #Admin email check
+        if user.role == 'admin':
+            if user.email not in settings.ALLOWED_ADMIN_EMAILS:
+                return HttpResponseForbidden("You are not authorized to log in as admin.")
+
         login(request, user)
 
         # Redirect based on user role
