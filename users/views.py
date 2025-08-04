@@ -40,13 +40,6 @@ def login_view(request):
         user = form.get_user()
         login(request, user)
 
-        #Admin email check
-        if user.role == 'admin':
-            if user.email not in settings.ALLOWED_ADMIN_EMAILS:
-                return HttpResponseForbidden("You are not authorized to log in as admin.")
-
-        login(request, user)
-
         # Redirect based on user role
         if user.role == 'admin':
             return redirect('overview') # Admin

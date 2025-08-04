@@ -1,0 +1,225 @@
+{% extends 'adminpanel/index.html' %}
+{% load static %}
+{% load admin_custom_filters %}
+
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/admin.css' %}">
+
+<div class="welcome-box">
+    <h3>User Management</h3>
+    <p>Track user roles and activities</p>
+    <div class="progress mt-2" style="width: 75%; height: 10px;">
+        <div class="progress-bar" style="width: 100%"></div>
+    </div>
+</div>
+
+<div class="container-fluid py-4">
+  
+  <!-- Dashboard Tiles -->
+  <div class="row mb-4">
+    <div class="col-md-2">
+      <div class="card text-white bg-info shadow">
+        <div class="card-body">
+          <h5>Total Users</h5>
+          <p class="fs-4">{{ users.count }}</p>
+        </div>
+      </div>
+    </div>
+    {% for role, label in role_counts.items %}
+    <div class="col-md-2">
+      <div class="card text-white bg-secondary shadow">
+        <div class="card-body">
+          <h5>{{ label }}</h5>
+          <p class="fs-4">{{ role_totals|get_item:role|default:"0" }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- 🔍 Search & Filter -->
+  <form method="get" class="row mb-4 g-2">
+    <div class="col-md-4">
+      <input type="text" name="search" placeholder="Search by username or email" class="form-control"
+        value="{{ request.GET.search }}">
+    </div>
+    <div class="col-md-4">
+      <select name="role" class="form-select">
+        <option value="">🔽 Filter by Role</option>
+        <option value="manager" {% if request.GET.role == "manager" %}selected{% endif %}>📋 Project Manager</option>
+        <option value="staff" {% if request.GET.role == "staff" %}selected{% endif %}>👨‍💻 Team Member</option>
+        <option value="student" {% if request.GET.role == "student" %}selected{% endif %}>🎓 Student</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button class="btn btn-dark" type="submit">Apply Filters</button>
+      <a href="{% url 'manage_users' %}" class="btn btn-outline-secondary">Clear</a>
+    </div>
+  </form>
+
+  <!-- ➕ Create User Modal Button -->
+  <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#createUserModal">➕ Add New User</button>
+
+  <!-- ✅ Messages -->
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- 📋 User Table -->
+  <table class="table table-hover table-bordered shadow-sm">
+    <thead class="table-light">
+      <tr>
+        <th>#</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.get_role_display }}</td>
+        <td>
+          {% if user.is_active %}
+          <span class="badge bg-success">Active</span>
+          {% else %}
+          <span class="badge bg-secondary">Inactive</span>
+          {% endif %}
+        </td>
+        <td>
+          <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">✏️ Edit</button>
+          {% if user.is_active %}
+          <a href="{% url 'deactivate_user' user.id %}" class="btn btn-sm btn-outline-danger">🚫</a>
+          {% else %}
+          <a href="{% url 'activate_user' user.id %}" class="btn btn-sm btn-outline-success">✅</a>
+          {% endif %}
+          <a href="{% url 'delete_user' user.id %}" class="btn btn-sm btn-danger"
+            onclick="return confirm('Are you sure you want to delete this user?')">🗑️</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center">No users found.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% for user in users %}
+<div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">✏️ Edit {{ user.username }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" action="{% url 'edit_user' user.id %}">
+        {% csrf_token %}
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <label>Username</label>
+            <input type="text" name="username" class="form-control" value="{{ user.username }}">
+          </div>
+          <div class="col-md-6">
+            <label>Email</label>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}">
+          </div>
+          <div class="col-md-6">
+            <label>Role</label>
+            <select name="role" class="form-select">
+              {% for value, label in user.ROLE_CHOICES %}
+                <option value="{{ value }}" {% if user.role == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label>New Password</label>
+            <input type="password" name="password1" class="form-control" placeholder="Leave blank to keep current">
+          </div>
+          <div class="col-md-6">
+            <label>Confirm Password</label>
+            <input type="password" name="password2" class="form-control" placeholder="Leave blank to keep current">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Update</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+</div>
+
+<!-- 🎯 Create User Modal -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createUserModalLabel">➕ Create New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{% url 'create_user' %}">
+        {% csrf_token %}
+        <div class="modal-body row g-3">
+          <div class="col-md-6">
+            <label>Username</label>
+            {{ form.username }}
+          </div>
+          <div class="col-md-6">
+            <label>Email</label>
+            {{ form.email }}
+          </div>
+          <div class="col-md-6">
+            <label>Role</label>
+            {{ form.role }}
+          </div>
+          <div class="col-md-6">
+            <label>Password</label>
+            {{ form.password1 }}
+          </div>
+          <div class="col-md-6">
+            <label>Confirm Password</label>
+            {{ form.password2 }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editModalLabel{{ user.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <div class="modal-header">
+        <h5 class="modal-title">✏️ Edit {{ user.username }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Inject form partial via include -->
+      {% with form=edit_forms|get_item:user.id %}
+        {% include "adminpanel/partials/edit_user.html" with form=form user_id=user.id user_obj=user %}
+      {% endwith %}
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

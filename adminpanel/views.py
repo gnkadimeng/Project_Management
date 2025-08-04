@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from users.models import CustomUser
+from users.forms import CustomUserCreationForm
 from .models import CostCentre, Expenditure, SupervisorProfile, SupervisorFeedback
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
@@ -11,10 +12,13 @@ from .forms import SupervisorFeedbackForm
 from django.http import JsonResponse, HttpResponseBadRequest
 from decimal import Decimal, InvalidOperation
 from django.db.models import Sum, Count, Q
+from collections import Counter
 from django.db.models.functions import TruncMonth
 from django.utils.dateparse import parse_date
 from manager.models import Paper
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 @login_required
@@ -67,6 +71,157 @@ def overview(request):
         'projects': projects,
         'users': users
     })
+
+def is_admin(user):
+    return user.is_authenticated and user.role == 'admin'
+
+@login_required
+@user_passes_test(is_admin)
+def manage_users(request):
+    search = request.GET.get('search', '')
+    role_filter = request.GET.get('role', '')
+
+    users = CustomUser.objects.exclude(role='admin')
+
+    if search:
+        users = users.filter(Q(username__icontains=search) | Q(email__icontains=search))
+    if role_filter:
+        users = users.filter(role=role_filter)
+
+    role_totals = Counter(CustomUser.objects.exclude(role='admin').values_list('role', flat=True))
+    role_labels = dict(CustomUser.ROLE_CHOICES)
+
+        # 🛠️ Create a dict of user_id → pre-filled edit form
+    edit_forms = {user.id: CustomUserCreationForm(instance=user) for user in users}
+
+    return render(request, 'adminpanel/manage_users.html', {
+        'users': users,
+        'form': CustomUserCreationForm(),
+        'edit_forms': edit_forms,
+        'role_totals': role_totals,
+        'role_counts': role_labels
+    })
+
+
+@login_required
+@user_passes_test(is_admin)
+def create_user(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.role = form.cleaned_data['role']
+            password = form.cleaned_data['password1']
+            user.set_password(password)
+            user.save()
+
+            # Send email to new user
+            subject = "🎉 You've been registered on the Project Management System"
+            message = f"""
+Hello {user.username},
+
+You have been successfully registered on the UJ Project Management Platform.
+
+🔑 Login Credentials:
+Username: {user.username}
+Password: {password}
+
+🔗 Login URL: https://127.0.0.1:8000/login/
+
+Please change your password after your first login.
+
+Regards,
+UJ Project Management Admin Team
+            """.strip()
+
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+
+            messages.success(request, f"User {user.username} created and notified via email.")
+        else:
+            messages.error(request, "Failed to create user. Please check the form.")
+    return redirect('manage_users')
+
+
+@login_required
+@user_passes_test(is_admin)
+def activate_user(request, user_id):
+    user = get_object_or_404(CustomUser, pk=user_id)
+    user.is_active = True
+    user.save()
+    messages.success(request, f"{user.username} activated.")
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_admin)
+def deactivate_user(request, user_id):
+    user = get_object_or_404(CustomUser, pk=user_id)
+    user.is_active = False
+    user.save()
+    messages.warning(request, f"{user.username} deactivated.")
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_admin)
+def delete_user(request, user_id):
+    user = get_object_or_404(CustomUser, pk=user_id)
+    if user.role != 'admin':
+        user.delete()
+        messages.error(request, f"{user.username} deleted.")
+    else:
+        messages.error(request, "You cannot delete an admin.")
+    return redirect('manage_users')
+
+# @login_required
+# @user_passes_test(is_admin)
+# def edit_user(request, user_id):
+#     user = get_object_or_404(CustomUser, pk=user_id)
+
+#     if request.method == 'POST':
+#         form = CustomUserCreationForm(request.POST, instance=user)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, f"{user.username} updated.")
+#             return redirect('manage_users')
+#         else:
+#             messages.error(request, "Something went wrong updating the user.")
+#     else:
+#         form = CustomUserCreationForm(instance=user)
+
+#     return render(request, 'adminpanel/partials/edit_user_form.html', {
+#         'form': form,
+#         'user_id': user.id,
+#         'user_obj': user
+#     })
+
+@login_required
+@user_passes_test(is_admin)
+def edit_user(request, user_id):
+    user = get_object_or_404(CustomUser, pk=user_id)
+
+    if request.method == 'POST':
+        user.username = request.POST.get('username')
+        user.email = request.POST.get('email')
+        user.role = request.POST.get('role')
+
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        if password1 and password1 == password2:
+            user.set_password(password1)
+
+        user.save()
+        messages.success(request, f"{user.username} updated.")
+    else:
+        messages.error(request, "Invalid request.")
+    return redirect('manage_users')
+
+
 
 @login_required
 @user_passes_test(lambda u: u.role == 'admin')
@@ -362,8 +517,14 @@ def admin_journal(request):
 def admin_book(request):
     return render(request, 'adminpanel/admin_book.html')
 
+# def admin_required(view_func):
+#     return user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')(view_func)
+
 def admin_required(view_func):
-    return user_passes_test(lambda u: u.is_authenticated and u.role == 'admin')(view_func)
+    return user_passes_test(
+        lambda u: u.is_authenticated and u.role == 'admin',
+        login_url='/login/'  #  app login page
+    )(view_func)
 
 @admin_required
 def admin_user_kanban(request, user_id):

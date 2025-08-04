@@ -79,10 +79,20 @@ def manager_kanban(request):
     statuses = list(status_labels.keys())
     priorities = ['Low', 'Medium', 'High']
 
-    tasks = Task.objects.filter(Q(created_by=request.user) | Q(project__assigned_user=request.user))
+    #Fetch all tasks created by the manager or from projects tehy created/assigned
+    tasks = Task.objects.filter(Q(created_by=request.user) | Q(project__created_by=request.user) | Q(project__assigned_user=request.user))
+    
+    #Group tasks by their status
     tasks_by_status = defaultdict(list)
     for task in tasks:
         tasks_by_status[task.status].append(task)
+
+    # Include all projects the manager is involved in (created or assigned)
+    projects = Project.objects.filter(
+        Q(created_by=request.user) |
+        Q(assigned_user=request.user)
+    ).distinct()
+
 
     context = {
         'statuses': statuses,
@@ -90,7 +100,7 @@ def manager_kanban(request):
         'priorities': priorities,
         'grouped_tasks': dict(tasks_by_status),
         'task_types': TASK_TYPES,
-        'projects': Project.objects.filter(Q(created_by=request.user) | Q(assigned_user=request.user)).distinct(),
+        'projects': projects,
         'today': now().date(),
     }
     return render(request, 'manager/manager_kanban.html', context)

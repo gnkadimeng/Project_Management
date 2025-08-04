@@ -259,7 +259,33 @@
         boardArea.innerHTML = html;
       });
   });
-</script>
 
+  document.addEventListener('DOMContentLoaded', function () {
+    const userSelect = document.getElementById('kanbanUserSelect');
+    const boardArea = document.getElementById('kanbanBoardArea');
+
+  userSelect.addEventListener('change', function () {
+    const userId = this.value;
+
+    if (!userId) {
+      boardArea.innerHTML = '<p class="text-muted">Please select a user to view their tasks.</p>';
+      return;
+    }
+
+    fetch(`/adminpanel/user-kanban/${userId}/`)
+      .then(response => {
+        if (!response.ok) throw new Error('Network error');
+        return response.text();
+      })
+      .then(html => {
+        boardArea.innerHTML = html;
+      })
+      .catch(error => {
+        boardArea.innerHTML = '<div class="alert alert-danger">Error loading task board.</div>';
+        console.error(error);
+      });
+  });
+});
+</script>
 
 {% endblock %}

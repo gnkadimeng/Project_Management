@@ -33,12 +33,18 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'project_manage.onrender.com']
 
 # allowed admin emails
 ALLOWED_ADMIN_EMAILS = [
-    'admin@gmail.com',
-    'hopelotriet@gmail.com',
-    'admin1@uj.ac.za',
-    'admin2@uj.ac.za',
-    'admin3@uj.ac.za'
+    'lotriet.work@gmail.com',
+    'hopelotriet@gmail.com'
 ]
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'lotriet.work@gmail.com'
+EMAIL_HOST_PASSWORD = 'g e c y h m n c v s y r y y z g'  # Use App Password, not your real password!
+DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
 
 
 # Application definition

@@ -1,11 +1,14 @@
 <!-- adminpanel/partials/user_kanban.html -->
+{% load kanban_filters %}
+
+
 <h5 class="mt-5">{{ user.get_full_name }}'s Taskboard</h5>
 <div class="row">
   {% for column, items in task_data.items %}
   <div class="col-md-3">
     <div class="card mb-3">
       <div class="card-header bg-light">
-        <strong class="text-capitalize">{{ column.replace('_', ' ') }}</strong>
+        <strong class="text-capitalize">{{ column|replace_underscore }}</strong>
       </div>
       <div class="card-body" style="min-height: 200px;">
         {% for task in items %}
