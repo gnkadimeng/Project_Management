@@ -67,6 +67,21 @@ CSRF_TRUSTED_ORIGINS = [
     'https://project_manage.onrender.com',
 ]
 
+# allowed admin emails
+ALLOWED_ADMIN_EMAILS = [
+    'lotriet.work@gmail.com',
+    'hopelotriet@gmail.com'
+]
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'lotriet.work@gmail.com'
+EMAIL_HOST_PASSWORD = 'g e c y h m n c v s y r y y z g'  # Use App Password, not your real password!
+DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
+
 # Add Azure hostnames to CSRF trusted origins
 if azure_hostname:
     CSRF_TRUSTED_ORIGINS.append(f'https://{azure_hostname}')
@@ -131,10 +146,7 @@ WSGI_APPLICATION = 'project_manage.wsgi.application'
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
+# Database configuration for both Docker and Azure
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv(
