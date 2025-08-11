@@ -38,6 +38,31 @@ def admin_ganttchart(request):
     return render(request, 'adminpanel/admin_ganttchart.html', {'projects': projects})
 
 
+def register_users(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            role = request.POST.get('role')
+
+            # Prevent anyone from trying to register as an admin
+            if role == 'admin':
+                form.add_error(None, "You are not allowed to register as an admin.")
+                return render(request, 'users/register.html', {'form': form})
+
+            user = form.save(commit=False)
+            user.role = role
+            user.save()
+
+            # Automatically create StudentProfile if role is student
+            if role == 'student':
+                supervisor = CustomUser.objects.filter(role='admin').first()
+                StudentProfile.objects.create(user=user, supervisor=supervisor)
+
+            return redirect('login')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'users/register.html', {'form': form})
+
 
 @login_required
 def overview(request):
@@ -114,24 +139,23 @@ def create_user(request):
             password = form.cleaned_data['password1']
             user.set_password(password)
             user.save()
-
             # Send email to new user
             subject = "🎉 You've been registered on the Project Management System"
             message = f"""
-Hello {user.username},
+            Hello {user.username},
 
-You have been successfully registered on the UJ Project Management Platform.
+            You have been successfully registered on the UJ Project Management Platform.
 
-🔑 Login Credentials:
-Username: {user.username}
-Password: {password}
+            🔑 Login Credentials:
+            Username: {user.username}
+            Password: {password}
 
-🔗 Login URL: https://127.0.0.1:8000/login/
+            🔗 Login URL: https://django-project-app.lemonisland-3cb848d5.southafricanorth.azurecontainerapps.io
 
-Please change your password after your first login.
+            Please change your password after your first login.
 
-Regards,
-UJ Project Management Admin Team
+            Regards,
+            UJ Project Management Admin Team
             """.strip()
 
             send_mail(
@@ -144,6 +168,7 @@ UJ Project Management Admin Team
 
             messages.success(request, f"User {user.username} created and notified via email.")
         else:
+            print(form.errors)
             messages.error(request, "Failed to create user. Please check the form.")
     return redirect('manage_users')
 
