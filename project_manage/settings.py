@@ -16,39 +16,74 @@ import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_0c$9attqx23_v=(t13^$f8!z)yyn+kz+^)%a=)5r)sg_r8b0u'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-_0c$9attqx23_v=(t13^$f8!z)yyn+kz+^)%a=)5r)sg_r8b0u')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'project_manage.onrender.com']
-
-# allowed admin emails
-ALLOWED_ADMIN_EMAILS = [
-    'lotriet.work@gmail.com',
-    'hopelotriet@gmail.com'
+# Enhanced ALLOWED_HOSTS configuration for Azure Container Apps and other platforms
+ALLOWED_HOSTS = [
+    '127.0.0.1', 
+    'localhost', 
+    'project_manage.onrender.com',
 ]
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'lotriet.work@gmail.com'
-EMAIL_HOST_PASSWORD = 'g e c y h m n c v s y r y y z g'  # Use App Password, not your real password!
-DEFAULT_FROM_EMAIL = 'noreply@yourdomain.com'
+# Add Azure hostnames
+azure_hostname = os.getenv('WEBSITE_HOSTNAME', '')  # Azure App Service
+if azure_hostname:
+    ALLOWED_HOSTS.append(azure_hostname)
 
+# Add Container Apps hostname (from environment or HTTP_HOST)
+container_app_hostname = os.getenv('CONTAINER_APP_HOSTNAME', '')
+if container_app_hostname:
+    ALLOWED_HOSTS.append(container_app_hostname)
+
+# Allow custom ALLOWED_HOSTS from environment variable
+custom_hosts = os.getenv('ALLOWED_HOSTS', '')
+if custom_hosts:
+    # Split by comma and add to ALLOWED_HOSTS
+    ALLOWED_HOSTS.extend([host.strip() for host in custom_hosts.split(',') if host.strip()])
+
+# For development/testing, allow all hosts if DEBUG is True
+if DEBUG and os.getenv('ALLOW_ALL_HOSTS', 'False').lower() == 'true':
+    ALLOWED_HOSTS = ['*']
+
+# Remove empty strings from ALLOWED_HOSTS
+ALLOWED_HOSTS = [host for host in ALLOWED_HOSTS if host]
+
+# Ensure we have at least localhost for local development
+if not ALLOWED_HOSTS:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+# CSRF Configuration - Enhanced for Azure Container Apps
+CSRF_TRUSTED_ORIGINS = [
+    'https://127.0.0.1',
+    'https://localhost', 
+    'https://project_manage.onrender.com',
+]
+
+# Add Azure hostnames to CSRF trusted origins
+if azure_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{azure_hostname}')
+
+if container_app_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{container_app_hostname}')
+
+# Allow custom CSRF_TRUSTED_ORIGINS from environment variable
+custom_csrf_origins = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+if custom_csrf_origins:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in custom_csrf_origins.split(',') if origin.strip()])
+
+# For development/testing, disable CSRF if needed (NOT recommended for production)
+if DEBUG and os.getenv('DISABLE_CSRF', 'False').lower() == 'true':
+    MIDDLEWARE = [m for m in MIDDLEWARE if m != 'django.middleware.csrf.CsrfViewMiddleware']
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -65,13 +100,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'project_manage.urls'
@@ -102,42 +137,19 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.getenv("DATABASE_URL", "postgres://postgres:Musa@localhost:5432/project_management"),
+        default=os.getenv(
+            'DATABASE_URL',
+            'postgres://postgres:postgres@db:5432/project_management'  # <-- NOTE the host is 'db' here
+        ),
         conn_max_age=600,
         ssl_require=False
     )
 }
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'db',
-#         'USER': 'postgres',
-#         'PASSWORD': 'Admin',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
-
-# DATABASES = {
-#     'default': dj_database_url.config(
-#         default=os.getenv(
-#             'DATABASE_URL',
-#             'postgres://postgres:postgres@db:5432/project_management'  # <-- NOTE the host is 'db' here
-#         ),
-#         conn_max_age=600,
-#     )
-# }
-
-
-
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -153,42 +165,68 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-# STATIC_URL = 'static/'
-
-
-# Static files (CSS, JavaScript, Images)
+# Static files configuration
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")] if os.path.exists(os.path.join(BASE_DIR, "static")) else []
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Use WhiteNoise for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-
+# Azure Web Apps specific security settings
+if os.getenv('WEBSITE_HOSTNAME'):
+    # We're running on Azure
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = "/login"
 LOGOUT_REDIRECT_URL = "/login/"
 
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
